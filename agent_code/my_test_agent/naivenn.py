@@ -81,6 +81,8 @@ def experience_replay(self):
     for state, action, reward, state_next, terminal in batch:
         if state is None:
             continue
+        if USE_CUDA:
+            state_next, state = state_next.cuda(), state.cuda()
         action_id = ACTIONS.index(action)
         q_update = reward
         if not terminal:
