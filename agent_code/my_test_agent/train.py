@@ -11,8 +11,7 @@ from torch.optim import lr_scheduler
 import events as e
 from . import naivenn
 from .naivenn import NaiveNN
-from .naivenn import MEMORY_SIZE, EXPLORATION_MAX, LEARNING_RATE
-from .features import state_to_features
+from .naivenn import MEMORY_SIZE, EXPLORATION_MAX, LEARNING_RATE, USE_CUDA
 
 # This is only an example!
 Transition = namedtuple('Transition',
@@ -35,6 +34,8 @@ def setup_training(self):
     #self.transitions = deque(maxlen=TRANSITION_HISTORY_SIZE)
     torch.set_grad_enabled(False)
     self.model = NaiveNN(313)
+    if USE_CUDA:
+        self.model = self.model.cuda()
     self.optimizer = Adam(self.model.parameters(), lr=LEARNING_RATE)
     self.lr_scheduler = lr_scheduler.StepLR(self.optimizer, step_size=8, gamma=0.1)
     self.loss = torch.nn.MSELoss()

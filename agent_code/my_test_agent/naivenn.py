@@ -21,6 +21,8 @@ EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 LEARNING_RATE = 1e-3
 
+USE_CUDA = torch.cuda.is_available()
+
 
 class NaiveNN(nn.Module):
     def __init__(self, input_size, output_size=len(ACTIONS)):
@@ -47,6 +49,8 @@ def act(self, state):
     if np.random.rand() < self.exploration_rate:
         return ACTIONS[random.randrange(len(ACTIONS))]
     self.model.eval()
+    if USE_CUDA:
+        state = state.cuda()
     q_values = self.model(state)
     return ACTIONS[q_values.argmax()]
 
@@ -62,6 +66,8 @@ def remember(self, state, action, reward, next_state, done):
 def fit_model(self, X, y):
     self.model.train() # Put model in training mode
     self.optimizer.zero_grad()
+    if USE_CUDA:
+        X, y = X.cuda(), y.cuda()
     with torch.set_grad_enabled(True):
         outputs = self.model(X)
         loss = self.loss(outputs, y)
