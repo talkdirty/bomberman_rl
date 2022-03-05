@@ -4,7 +4,6 @@ from pathlib import Path
 from fallbacks import pygame
 
 ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
-#ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT']
 
 # Game properties
 COLS = 17

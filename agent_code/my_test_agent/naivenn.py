@@ -17,8 +17,8 @@ EXPLORATION_RATE = .1
 GAMMA = .95
 
 EXPLORATION_MAX = 1.0
-EXPLORATION_MIN = 0.01
-EXPLORATION_DECAY = 0.995
+EXPLORATION_MIN = 0.1
+EXPLORATION_DECAY = 0.9995
 LEARNING_RATE = 1e-3
 
 USE_CUDA = torch.cuda.is_available()
@@ -27,23 +27,17 @@ USE_CUDA = torch.cuda.is_available()
 class NaiveNN(nn.Module):
     def __init__(self, input_size, output_size=len(ACTIONS)):
         super(NaiveNN, self).__init__()
-        self.inp = nn.Linear(input_size, 128)
-        self.l1 = nn.Linear(128, 60)
-        self.l2 = nn.Linear(60, 30)
-        self.l3 = nn.Linear(30, 20)
-        self.out = nn.Linear(20, output_size)
+        self.inp = nn.Linear(input_size, 256)
+        self.l1 = nn.Linear(256, 256)
+        self.out = nn.Linear(256, output_size)
 
     def forward(self, x):
         x = self.inp(x)
         x = F.relu(x)
         x = self.l1(x)
         x = F.relu(x)
-        x = self.l2(x)
-        x = F.relu(x)
-        x = self.l3(x)
-        x = F.relu(x)
         x = self.out(x)
-        return torch.sigmoid(x)
+        return x
 
 def act(self, state):
     if np.random.rand() < self.exploration_rate:
