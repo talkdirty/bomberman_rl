@@ -96,7 +96,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.total_steps += 1
     self.total_rewards += reward
 
-    print('Total Steps, Rewards', self.total_steps, self.total_rewards)
+    print('Total Steps, Rewards', self.total_steps, self.total_rewards, self.total_rewards / self.total_steps)
 
     self.total_steps, self.total_rewards = 0, 0
 
