@@ -5,7 +5,9 @@ from time import sleep, time
 from tqdm import tqdm
 
 import settings as s
-from environment import BombeRLeWorld, GUI
+#from environment import BombeRLeWorld, GUI
+from environment import GUI
+from bombergymenv import BombeRLeWorld
 from fallbacks import pygame, LOADED_PYGAME
 from replay import ReplayWorld
 
