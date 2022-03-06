@@ -75,7 +75,7 @@ class BombeRLeWorldFeatureEng(BombeRLeWorld, gym.Env):
         own_reward = reward_from_events(events)
         orig_state = self.get_state_for_agent(self.agents[0])
         done = self.time_to_stop()
-        other = {"events": events}
+        other = {"events": events, "orig_state": orig_state}
         return state_to_gym(orig_state), own_reward, done, other
 
     def close(self):

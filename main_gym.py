@@ -1,9 +1,22 @@
+import argparse
 import gym
 import getch
 
 import settings as s
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
+from bombergymenv_callbacks import CustomCallback
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--checkpoint-dir', required=False) 
+
+args = parser.parse_args()
+
+# Instantiate Custom Callback for checkpointing and evaling model
+if args.checkpoint_dir:
+    callback = CustomCallback(args.checkpoint_dir)
+else:
+    callback = None
 
 # Way to avoid tedious argparse
 class BombeRLeSettings:
@@ -30,50 +43,51 @@ class BombeRLeSettings:
     save_stats = False # No effect ?
     make_video = False # No effect
 
-args = BombeRLeSettings()
+bomber = BombeRLeSettings()
 
 # Setup agents
 agents = []
-if args.train == 0 and not args.continue_without_training:
-    args.continue_without_training = True
-if args.my_agent:
-    agents.append((args.my_agent, len(agents) < args.train))
-    args.agents = ["rule_based_agent"] * (s.MAX_AGENTS - 1)
-for agent_name in args.agents:
-    agents.append((agent_name, len(agents) < args.train))
+if bomber.train == 0 and not bomber.continue_without_training:
+    bomber.continue_without_training = True
+if bomber.my_agent:
+    agents.append((bomber.my_agent, len(agents) < bomber.train))
+    bomber.agents = ["rule_based_agent"] * (s.MAX_AGENTS - 1)
+for agent_name in bomber.agents:
+    agents.append((agent_name, len(agents) < bomber.train))
 
 gym.envs.register(
     id='BomberGym-v0',
     entry_point='bombergymenv_features:BombeRLeWorldFeatureEng',
     max_episode_steps=401,
-    kwargs={ 'args': args, 'agents': agents }
+    kwargs={ 'args': bomber, 'agents': agents }
 )
-env = gym.make('BomberGym-v0')
-# env = make_vec_env("BomberGym-v0", n_envs=4)
-env.reset()
-env.render()
-while True:
-    inp = getch.getch()
-    if inp == 'h':
-        action = 3
-    elif inp == 'j':
-        action = 2
-    elif inp == 'k':
-        action = 0
-    elif inp == 'l':
-        action = 1
-    elif inp == 'b':
-        action = 5
-    else:
-        action = 4
-    obs, rew, done, other = env.step(action)
-    if not done:
-        env.render(events=other["events"], rewards=rew)
-    else:
-        print(other["events"], f"Reward: {rew}")
-        break
+# env = gym.make('BomberGym-v0')
+# # env = make_vec_env("BomberGym-v0", n_envs=4)
+# env.reset()
+# env.render()
+# while True:
+#     inp = getch.getch()
+#     if inp == 'h':
+#         action = 3
+#     elif inp == 'j':
+#         action = 2
+#     elif inp == 'k':
+#         action = 0
+#     elif inp == 'l':
+#         action = 1
+#     elif inp == 'b':
+#         action = 5
+#     else:
+#         action = 4
+#     obs, rew, done, other = env.step(action)
+#     if not done:
+#         env.render(events=other["events"], rewards=rew)
+#     else:
+#         print(other["events"], f"Reward: {rew}")
+#         break
     
 
-# model = PPO("MultiInputPolicy", env, verbose=1)
-# model.learn(total_timesteps=4000)
-# model.save("bombermodel")
+env = make_vec_env("BomberGym-v0", n_envs=4)
+model = PPO("MultiInputPolicy", env, verbose=1)
+model.learn(total_timesteps=24000, callback=callback)
+model.save("bombermodel")
