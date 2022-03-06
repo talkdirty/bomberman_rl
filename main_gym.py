@@ -4,6 +4,8 @@ import os
 from argparse import ArgumentParser
 import settings as s
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3 import A2C
+from stable_baselines3.common.env_util import make_vec_env
 
 
 parser = ArgumentParser()
@@ -70,6 +72,11 @@ if args.command_name == "play":
         max_episode_steps=401,
         kwargs={ 'args': args, 'agents': agents }
     )
-    env = gym.make('BomberGym-v0')
-    check_env(env)
-    print(env)
+    #env = gym.make('BomberGym-v0')
+    #check_env(env)
+
+    env = make_vec_env("BomberGym-v0", n_envs=4)
+
+    model = A2C("MultiInputPolicy", env, verbose=1)
+    model.learn(total_timesteps=25000)
+    model.save("bombermodel")

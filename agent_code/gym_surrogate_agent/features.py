@@ -17,10 +17,14 @@ def agents_to_features(game_state: dict) -> np.array:
     other_features[0, :] = self_feature
     return other_features
 
-def gym_field(field: np.ndarray) -> np.array:
+def gym_field(field: np.ndarray, others: list, self: tuple) -> np.array:
     gym_f = np.zeros_like(field, dtype=np.int64)
     gym_f[field == 1] = 1
     gym_f[field == -1] = 2
+    for other in others:
+        gym_f[other[3][1], other[3][0]] = 3
+    gym_f[self[3][1], self[3][0]] = 4
+    
     return gym_f.flatten()
 
 def gym_bombs(bomb_state: list) -> np.array:
@@ -60,10 +64,9 @@ def state_to_gym(game_state: dict) -> dict:
     if game_state is None:
         return None
     return {
-        'field': gym_field(game_state['field']),
+        'field': gym_field(game_state['field'], game_state['others'], game_state['self']),
         'bombs': gym_bombs(game_state['bombs']),
         'explosions': gym_explosions(game_state['explosion_map']),
         'coins': gym_coins(game_state['coins']),
-        'other_bombs': gym_other_bombs(game_state['others']),
-        'others': gym_others(game_state['others'])
+        'other_bombs': gym_other_bombs(game_state['others'])
     }

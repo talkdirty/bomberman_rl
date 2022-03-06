@@ -57,12 +57,12 @@ class BombeRLeWorld(gym.Env):
       # Example when using discrete actions:
       self.action_space = spaces.Discrete(len(s.ACTIONS))
       self.observation_space = spaces.Dict({
-          'field': spaces.MultiDiscrete([3] * (s.ROWS * s.COLS)),
+          'field': spaces.MultiDiscrete([5] * (s.ROWS * s.COLS)),
           'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
           'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
           'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
           'other_bombs': spaces.MultiDiscrete([2] * 3),
-          'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
+          #'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
       })
       self.args = args
       self.setup_logging()
@@ -87,11 +87,13 @@ class BombeRLeWorld(gym.Env):
     def step(self, action):
         action_orig = s.ACTIONS[action]
         self.perform_agent_action(self.agents[0], action_orig)
+        events = self.agents[0].events
+        own_reward = reward_from_events(events)
         self.do_step()
-        own_reward = reward_from_events(self.agents[0].events)
         orig_state = self.get_state_for_agent(self.agents[0])
         done = self.time_to_stop()
-        return state_to_gym(orig_state), own_reward, done, {}
+        other = {"events": events}
+        return state_to_gym(orig_state), own_reward, done, other
 
     def render(self, mode='console'):
         return ""
