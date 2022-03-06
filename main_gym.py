@@ -75,8 +75,8 @@ if args.command_name == "play":
     #env = gym.make('BomberGym-v0')
     #check_env(env)
 
-    env = make_vec_env("BomberGym-v0", n_envs=4)
+    env = make_vec_env("BomberGym-v0", n_envs=8)
 
     model = A2C("MultiInputPolicy", env, verbose=1)
-    model.learn(total_timesteps=25000)
+    model.learn(total_timesteps=500000)
     model.save("bombermodel")
