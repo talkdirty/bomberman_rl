@@ -15,6 +15,7 @@ import gym
 from gym import spaces
 from agent_code.gym_surrogate_agent.rewards import reward_from_events
 from agent_code.gym_surrogate_agent.features import state_to_gym
+import bombergym_render
 
 
 WorldArgs = namedtuple("WorldArgs",
@@ -84,16 +85,16 @@ class BombeRLeWorld(gym.Env):
     def step(self, action):
         action_orig = s.ACTIONS[action]
         self.perform_agent_action(self.agents[0], action_orig)
-        events = self.agents[0].events
+        events = self.do_step()
         own_reward = reward_from_events(events)
-        self.do_step()
         orig_state = self.get_state_for_agent(self.agents[0])
         done = self.time_to_stop()
         other = {"events": events}
         return state_to_gym(orig_state), own_reward, done, other
 
-    def render(self, mode='console'):
-        return ""
+    def render(self, mode="human", rewards=None, events=None):
+        orig_state = self.get_state_for_agent(self.agents[0])
+        return bombergym_render.render(orig_state, events=events, rewards=rewards)
 
     def close(self):
         pass
@@ -196,10 +197,12 @@ class BombeRLeWorld(gym.Env):
         self.update_explosions()
         self.update_bombs()
         self.evaluate_explosions()
+        events = self.active_agents[0].events if len(self.active_agents) else self.agents[0].events
         self.send_game_events()
 
         if self.time_to_stop():
             self.end_round()
+        return events
 
     def collect_coins(self):
         for coin in self.coins:

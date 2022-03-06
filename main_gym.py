@@ -1,8 +1,8 @@
 import gym
+import getch
 
 import settings as s
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import A2C, PPO
+from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 
 # Way to avoid tedious argparse
@@ -11,10 +11,11 @@ class BombeRLeSettings:
     my_agent = None
     agents = [
         'gym_surrogate_agent', # Important, needs to be first. Represents our agent
-        'random_agent', # Possibility to add other agents here
+        #'random_agent', # Possibility to add other agents here
     ]
     train = 1
     continue_without_training = False
+    #scenario = 'coin-heaven'
     scenario = 'classic'
     seed = None
     n_rounds = 10 # Has no effect
@@ -47,9 +48,32 @@ gym.envs.register(
     max_episode_steps=401,
     kwargs={ 'args': args, 'agents': agents }
 )
+env = gym.make('BomberGym-v0')
+# env = make_vec_env("BomberGym-v0", n_envs=4)
+env.reset()
+env.render()
+while True:
+    inp = getch.getch()
+    if inp == 'h':
+        action = 3
+    elif inp == 'j':
+        action = 2
+    elif inp == 'k':
+        action = 0
+    elif inp == 'l':
+        action = 1
+    elif inp == 'b':
+        action = 5
+    else:
+        action = 4
+    obs, rew, done, other = env.step(action)
+    if not done:
+        env.render(events=other["events"], rewards=rew)
+    else:
+        print(other["events"], f"Reward: {rew}")
+        break
+    
 
-env = make_vec_env("BomberGym-v0", n_envs=64)
-
-model = PPO("MultiInputPolicy", env, verbose=1)
-model.learn(total_timesteps=50000)
-model.save("bombermodel")
+# model = PPO("MultiInputPolicy", env, verbose=1)
+# model.learn(total_timesteps=4000)
+# model.save("bombermodel")
