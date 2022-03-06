@@ -1,7 +1,7 @@
 import numpy as np
 
 from bombergymenv import BombeRLeWorld
-from events import BOMB_EXPLODED
+from events import BOMB_EXPLODED, MOVED_DOWN, MOVED_LEFT, MOVED_RIGHT, MOVED_UP
 import settings as s
 import events as e
 
@@ -29,15 +29,20 @@ def reward_from_events(events) -> int:
     certain behavior.
     """
     if is_suicide(events):
-        return -2
+        return -3
     crates_destroyed = is_good_bomb_placement(events)
     if crates_destroyed is not None:
-        return 2
+        return crates_destroyed * 2.5
     game_rewards = {
-        e.COIN_COLLECTED: 1,
+        e.COIN_COLLECTED: 5,
         e.INVALID_ACTION: -1,
         e.KILLED_OPPONENT: 5,
         e.SURVIVED_ROUND: 1,
+        e.MOVED_DOWN: -.1,
+        e.MOVED_LEFT: -.1,
+        e.MOVED_RIGHT: -.1,
+        e.MOVED_UP: -.1,
+        e.WAITED: -.3,
     }
     reward_sum = 0
     for event in events:
