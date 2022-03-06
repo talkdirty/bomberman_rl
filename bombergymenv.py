@@ -136,15 +136,6 @@ class BombeRLeWorld(gym.Env):
         for agent in self.active_agents:
             agent.start_round()
 
-        self.replay = {
-            'round': new_round,
-            'arena': np.array(self.arena),
-            'coins': [c.get_state() for c in self.coins],
-            'agents': [a.get_state() for a in self.agents],
-            'actions': dict([(a.name, []) for a in self.agents]),
-            'permutations': []
-        }
-
         self.round = new_round
         self.running = True
 
@@ -417,41 +408,9 @@ class BombeRLeWorld(gym.Env):
             if a.available_think_time > 0:
                 a.act(self.get_state_for_agent(a))
 
-        # Give agents time to decide
-        perm = self.rng.permutation(len(self.active_agents))
-        self.replay['permutations'].append(perm)
         for i in range(1, len(self.active_agents)):
-        #for i in perm:
             a = self.active_agents[i]
-            if a.available_think_time > 0:
-                try:
-                    action, think_time = a.wait_for_act()
-                except KeyboardInterrupt:
-                    # Stop the game
-                    raise
-                except:
-                    if not self.args.silence_errors:
-                        raise
-                    # Agents with errors cannot continue
-                    action = "ERROR"
-                    think_time = float("inf")
-
-                self.logger.info(f'Agent <{a.name}> chose action {action} in {think_time:.2f}s.')
-                if think_time > a.available_think_time:
-                    next_think_time = a.base_timeout - (think_time - a.available_think_time)
-                    self.logger.warning(f'Agent <{a.name}> exceeded think time by {think_time - a.available_think_time:.2f}s. Setting action to "WAIT" and decreasing available time for next round to {next_think_time:.2f}s.')
-                    action = "WAIT"
-                    a.trophies.append(Trophy.time_trophy)
-                    a.available_think_time = next_think_time
-                else:
-                    self.logger.info(f'Agent <{a.name}> stayed within acceptable think time.')
-                    a.available_think_time = a.base_timeout
-            else:
-                self.logger.info(f'Skipping agent <{a.name}> because of last slow think time.')
-                a.available_think_time += a.base_timeout
-                action = "WAIT"
-
-            self.replay['actions'][a.name].append(action)
+            action, _ = a.wait_for_act()
             self.perform_agent_action(a, action)
 
     def send_game_events(self):
@@ -508,23 +467,3 @@ class BombeRLeWorld(gym.Env):
         for a in self.agents:
             results['by_agent'][a.name]['score'] = a.total_score
         results['by_round'] = self.round_statistics
-
-        if self.args.save_stats is not False:
-            if self.args.save_stats is not True:
-                file_name = self.args.save_stats
-            elif self.args.match_name is not None:
-                file_name = f'results/{self.args.match_name}.json'
-            else:
-                file_name = f'results/{datetime.now().strftime("%Y-%m-%d %H-%M-%S")}.json'
-
-            name = Path(file_name)
-            if not name.parent.exists():
-                name.parent.mkdir(parents=True)
-            with open(name, "w") as file:
-                json.dump(results, file, indent=4, sort_keys=True)
-
-        self.logger.info('SHUT DOWN')
-        for a in self.agents:
-            # Send exit message to shut down agent
-            self.logger.debug(f'Sending exit message to agent <{a.name}>')
-            # todo multiprocessing shutdown
