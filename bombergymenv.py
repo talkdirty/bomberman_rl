@@ -1,9 +1,6 @@
-import json
 import logging
-import pickle
 from collections import namedtuple
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict
 
 import numpy as np
@@ -51,7 +48,7 @@ class BombeRLeWorld(gym.Env):
 
 
     def __init__(self, args: WorldArgs, agents):
-      super(BombeRLeWorld, self).__init__()
+      super().__init__()
       # Define action and observation space
       # They must be gym.spaces objects
       # Example when using discrete actions:
@@ -419,18 +416,10 @@ class BombeRLeWorld(gym.Env):
             if a.train:
                 if not a.dead:
                     a.process_game_events(self.get_state_for_agent(a))
-                for enemy in self.active_agents:
-                    if enemy is not a:
-                        pass
-                        # a.process_enemy_game_events(self.get_state_for_agent(enemy), enemy)
         for a in self.agents:
             if a.train:
                 if not a.dead:
                     a.wait_for_game_event_processing()
-                for enemy in self.active_agents:
-                    if enemy is not a:
-                        pass
-                        # a.wait_for_enemy_game_event_processing()
         for a in self.active_agents:
             a.store_game_state(self.get_state_for_agent(a))
             a.reset_game_events()
@@ -462,8 +451,3 @@ class BombeRLeWorld(gym.Env):
     def end(self):
         if self.running:
             self.end_round()
-
-        results = {'by_agent': {a.name: a.lifetime_statistics for a in self.agents}}
-        for a in self.agents:
-            results['by_agent'][a.name]['score'] = a.total_score
-        results['by_round'] = self.round_statistics

@@ -43,13 +43,13 @@ for agent_name in args.agents:
 
 gym.envs.register(
     id='BomberGym-v0',
-    entry_point='bombergymenv:BombeRLeWorld',
+    entry_point='bombergymenv_features:BombeRLeWorldFeatureEng',
     max_episode_steps=401,
     kwargs={ 'args': args, 'agents': agents }
 )
 
-env = make_vec_env("BomberGym-v0", n_envs=4)
+env = make_vec_env("BomberGym-v0", n_envs=64)
 
 model = PPO("MultiInputPolicy", env, verbose=1)
-model.learn(total_timesteps=2000000)
+model.learn(total_timesteps=50000)
 model.save("bombermodel")
