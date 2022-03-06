@@ -11,7 +11,7 @@ class CustomCallback(BaseCallback):
     def __init__(
         self, 
         save_directory,
-        every_n_timesteps=1024, 
+        every_n_timesteps=10000, 
         num_samples=5,
         save_checkpoints=True,
         verbose=0,

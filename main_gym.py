@@ -1,6 +1,5 @@
 import argparse
 import gym
-import getch
 
 import settings as s
 from stable_baselines3 import PPO
@@ -8,7 +7,8 @@ from stable_baselines3.common.env_util import make_vec_env
 from bombergymenv_callbacks import CustomCallback
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--checkpoint-dir', required=False) 
+parser.add_argument('--checkpoint-dir', required=True) 
+parser.add_argument('--total-timesteps', required=False, type=int, default=1000000) 
 
 args = parser.parse_args()
 
@@ -61,33 +61,8 @@ gym.envs.register(
     max_episode_steps=401,
     kwargs={ 'args': bomber, 'agents': agents }
 )
-# env = gym.make('BomberGym-v0')
-# # env = make_vec_env("BomberGym-v0", n_envs=4)
-# env.reset()
-# env.render()
-# while True:
-#     inp = getch.getch()
-#     if inp == 'h':
-#         action = 3
-#     elif inp == 'j':
-#         action = 2
-#     elif inp == 'k':
-#         action = 0
-#     elif inp == 'l':
-#         action = 1
-#     elif inp == 'b':
-#         action = 5
-#     else:
-#         action = 4
-#     obs, rew, done, other = env.step(action)
-#     if not done:
-#         env.render(events=other["events"], rewards=rew)
-#     else:
-#         print(other["events"], f"Reward: {rew}")
-#         break
-    
 
 env = make_vec_env("BomberGym-v0", n_envs=4)
 model = PPO("MultiInputPolicy", env, verbose=1)
-model.learn(total_timesteps=24000, callback=callback)
+model.learn(total_timesteps=args.total_timesteps, callback=callback)
 model.save("bombermodel")
