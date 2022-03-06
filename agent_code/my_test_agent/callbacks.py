@@ -3,8 +3,8 @@ import os
 import numpy as np
 
 from settings import ACTIONS
-from . import naivenn
-from .features import state_to_features
+#from . import naivenn
+#from .features import state_to_features
 
 
 def setup(self):
@@ -41,4 +41,5 @@ def act(self, game_state: dict) -> str:
     """
     # todo Exploration vs exploitation
     self.logger.debug("Querying model for action.")
-    return naivenn.act(self, state_to_features(game_state))
+    pass
+    #return naivenn.act(self, state_to_features(game_state))

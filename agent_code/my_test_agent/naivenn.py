@@ -7,8 +7,6 @@ import torch.nn.functional as F
 
 from settings import ACTIONS
 
-from .features import state_to_features
-
 TRANSITION_HISTORY_SIZE = 3  # keep only ... last transitions
 RECORD_ENEMY_TRANSITIONS = 1.0  # record enemy transitions with probability ...
 MEMORY_SIZE = 1000
@@ -48,14 +46,14 @@ def act(self, state):
     q_values = self.model(state)
     return ACTIONS[q_values.argmax()]
 
-def remember(self, state, action, reward, next_state, done):
-    self.memory.append((
-        state_to_features(state), 
-        action, 
-        reward, 
-        state_to_features(next_state), 
-        done
-        ))
+#def remember(self, state, action, reward, next_state, done):
+#    self.memory.append((
+#        state_to_features(state), 
+#        action, 
+#        reward, 
+#        state_to_features(next_state), 
+#        done
+#        ))
 
 def fit_model(self, X, y):
     self.model.train() # Put model in training mode

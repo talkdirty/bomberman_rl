@@ -14,6 +14,12 @@ from agents import Agent, SequentialAgentBackend
 from fallbacks import pygame
 from items import Coin, Explosion, Bomb
 
+import gym
+from gym import spaces
+from agent_code.gym_surrogate_agent.rewards import reward_from_events
+from agent_code.gym_surrogate_agent.features import state_to_gym
+
+
 WorldArgs = namedtuple("WorldArgs",
                        ["no_gui", "fps", "turn_based", "update_interval", "save_replay", "replay", "make_video", "continue_without_training", "log_dir", "save_stats", "match_name", "seed", "silence_errors", "scenario"])
 
@@ -24,37 +30,74 @@ class Trophy:
     time_trophy = pygame.image.load(s.ASSET_DIR / 'hourglass.png')
 
 
-class BombeRLeWorld:
+class BombeRLeWorld(gym.Env):
+    metadata = {'render.modes': ['human']}
     logger: logging.Logger
-
+    
     running: bool = False
-    step: int
+    step_counter: int
     replay: Dict
     round_statistics: Dict
-
+    
     agents: List[Agent]
     active_agents: List[Agent]
     arena: np.ndarray
     coins: List[Coin]
     bombs: List[Bomb]
     explosions: List[Explosion]
-
+    user_input = 'WAIT'
+    
     round_id: str
 
+
     def __init__(self, args: WorldArgs, agents):
-        self.args = args
-        self.setup_logging()
+      super(BombeRLeWorld, self).__init__()
+      # Define action and observation space
+      # They must be gym.spaces objects
+      # Example when using discrete actions:
+      self.action_space = spaces.Discrete(len(s.ACTIONS))
+      self.observation_space = spaces.Dict({
+          'field': spaces.MultiDiscrete([3] * (s.ROWS * s.COLS)),
+          'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
+          'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
+          'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
+          'other_bombs': spaces.MultiDiscrete([2] * 3),
+          'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
+      })
+      self.args = args
+      self.setup_logging()
 
-        self.colors = list(s.AGENT_COLORS)
+      self.colors = list(s.AGENT_COLORS)
 
-        self.round = 0
-        self.round_statistics = {}
+      self.round = 0
+      self.round_statistics = {}
 
-        self.rng = np.random.default_rng(args.seed)
+      self.rng = np.random.default_rng(args.seed)
 
-        self.running = False
+      self.running = False
 
-        self.setup_agents(agents)
+      self.setup_agents(agents)
+    
+    def reset(self):
+        """Gym API reset"""
+        self.new_round()
+        orig_state = self.get_state_for_agent(self.agents[0])
+        return state_to_gym(orig_state)
+
+    def step(self, action):
+        action_orig = s.ACTIONS[action]
+        self.perform_agent_action(self.agents[0], action_orig)
+        self.do_step()
+        own_reward = reward_from_events(self.agents[0].events)
+        orig_state = self.get_state_for_agent(self.agents[0])
+        done = self.time_to_stop()
+        return state_to_gym(orig_state), own_reward, done, {}
+
+    def render(self, mode='console'):
+        return ""
+
+    def close(self):
+        pass
 
     def setup_logging(self):
         self.logger = logging.getLogger('BombeRLeWorld')
@@ -75,7 +118,7 @@ class BombeRLeWorld:
         self.logger.info(f'STARTING ROUND #{new_round}')
 
         # Bookkeeping
-        self.step = 0
+        self.step_counter = 0
         self.bombs = []
         self.explosions = []
 
@@ -150,8 +193,8 @@ class BombeRLeWorld:
     def do_step(self, user_input='WAIT'):
         assert self.running
 
-        self.step += 1
-        self.logger.info(f'STARTING STEP {self.step}')
+        self.step_counter += 1
+        self.logger.info(f'STARTING STEP {self.step_counter}')
 
         self.user_input = user_input
         self.logger.debug(f'User input: {self.user_input}')
@@ -276,7 +319,7 @@ class BombeRLeWorld:
                 self.logger.info('No training agent left alive, wrap up round')
                 return True
 
-        if self.step >= s.MAX_STEPS:
+        if self.step_counter >= s.MAX_STEPS:
             self.logger.info('Maximum number of steps reached, wrap up round')
             return True
 
@@ -346,7 +389,7 @@ class BombeRLeWorld:
 
         state = {
             'round': self.round,
-            'step': self.step,
+            'step': self.step_counter,
             'field': np.array(self.arena),
             'self': agent.get_state(),
             'others': [other.get_state() for other in self.active_agents if other is not agent],
@@ -366,14 +409,17 @@ class BombeRLeWorld:
 
     def poll_and_run_agents(self):
         # Tell agents to act
-        for a in self.active_agents:
+        # Do not run our own agent
+        for i in range(1, len(self.active_agents)):
+            a = self.active_agents[i]
             if a.available_think_time > 0:
                 a.act(self.get_state_for_agent(a))
 
         # Give agents time to decide
         perm = self.rng.permutation(len(self.active_agents))
         self.replay['permutations'].append(perm)
-        for i in perm:
+        for i in range(1, len(self.active_agents)):
+        #for i in perm:
             a = self.active_agents[i]
             if a.available_think_time > 0:
                 try:
@@ -438,7 +484,7 @@ class BombeRLeWorld:
             a.note_stat("score", a.score)
             a.note_stat("rounds")
         self.round_statistics[self.round_id] = {
-            "steps": self.step,
+            "steps": self.step_counter,
             **{key: sum(a.statistics[key] for a in self.agents) for key in ["coins", "kills", "suicides"]}
         }
 
@@ -451,13 +497,6 @@ class BombeRLeWorld:
         for a in self.agents:
             if a.train:
                 a.round_ended()
-
-        # Save course of the game for future replay
-        if self.args.save_replay:
-            self.replay['n_steps'] = self.step
-            name = f'replays/{self.round_id}.pt' if self.args.save_replay is True else self.args.save_replay
-            with open(name, 'wb') as f:
-                pickle.dump(self.replay, f)
 
     def end(self):
         if self.running:
