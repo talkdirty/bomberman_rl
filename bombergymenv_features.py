@@ -41,7 +41,7 @@ def bomb_pathfinding_grid(state):
 
 # TODO refactor
 def agent_on_bomb(state):
-    if state['field'] is None:
+    if state is None or state['field'] is None:
         return
     g = bomb_pathfinding_grid(state)
     g_agent = g.node(state['self'][3][1], state['self'][3][0])
@@ -56,7 +56,7 @@ def bomb_in_line_of_sight(state, bomb_range=s.BOMB_POWER):
     """"
     Pathfinding scenario: Our agent, all bombs, all obstacles.
     """
-    if state['field'] is None:
+    if state is None or state['field'] is None:
         return
     g = bomb_pathfinding_grid(state)
     g_agent = g.node(state['self'][3][1], state['self'][3][0])
