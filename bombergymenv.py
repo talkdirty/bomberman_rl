@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import logging
 from collections import namedtuple
 from datetime import datetime
@@ -47,7 +48,6 @@ class BombeRLeWorld(gym.Env):
     
     round_id: str
 
-
     def __init__(self, args: WorldArgs, agents):
       super().__init__()
       # Define action and observation space
@@ -75,6 +75,11 @@ class BombeRLeWorld(gym.Env):
       self.running = False
 
       self.setup_agents(agents)
+      self.last_state = None
+
+    @abstractmethod
+    def compute_extra_events(self, old_state: dict, new_state: dict, action):
+        pass
     
     def reset(self):
         """Gym API reset"""
@@ -84,10 +89,20 @@ class BombeRLeWorld(gym.Env):
 
     def step(self, action):
         action_orig = s.ACTIONS[action]
+        # Treat our own agent specially and dispatch its action
+        # WARNING alters game logic a bit, as we are usually not
+        # executed first (TODO relevant?)
         self.perform_agent_action(self.agents[0], action_orig)
+        # Hook into original logic and dispatch world update
         events = self.do_step()
-        own_reward = reward_from_events(events)
         orig_state = self.get_state_for_agent(self.agents[0])
+        # Provide facility for computing extra events with altered control
+        # flow, similar to train:game_events_occured in callback version
+        more_events = self.compute_extra_events(self.last_state, orig_state, action)
+        self.last_state = orig_state
+        if more_events:
+            events = events + more_events
+        own_reward = reward_from_events(events)
         done = self.time_to_stop()
         other = {"events": events}
         return state_to_gym(orig_state), own_reward, done, other
