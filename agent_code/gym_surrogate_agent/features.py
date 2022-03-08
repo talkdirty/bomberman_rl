@@ -215,12 +215,15 @@ def state_to_gym(game_state: dict) -> dict:
     # This is the dict before the game begins and after it ends
     if game_state is None:
         return None
-    return {
-        'field': gym_field(game_state['field'], game_state['others'], game_state['self'], game_state['coins'], game_state['bombs'], game_state['explosion_map']),
-        "bomb_awareness": feat_bomb_situational_awareness(game_state),
-        "bomb_on": feat_on_bomb(game_state)
-        #'bombs': gym_bombs(game_state['bombs']),
-        #'explosions': gym_explosions(game_state['explosion_map']),
-        #'coins': gym_coins(game_state['coins']),
-        #'other_bombs': gym_other_bombs(game_state['others'])
-    }
+    return gym_field(game_state['field'], game_state['others'], game_state['self'], game_state['coins'], game_state['bombs'], game_state['explosion_map'])
+
+
+    #return {
+    #    'field': gym_field(game_state['field'], game_state['others'], game_state['self'], game_state['coins'], game_state['bombs'], game_state['explosion_map']),
+    #    "bomb_awareness": feat_bomb_situational_awareness(game_state),
+    #    "bomb_on": feat_on_bomb(game_state)
+    #    #'bombs': gym_bombs(game_state['bombs']),
+    #    #'explosions': gym_explosions(game_state['explosion_map']),
+    #    #'coins': gym_coins(game_state['coins']),
+    #    #'other_bombs': gym_other_bombs(game_state['others'])
+    #}

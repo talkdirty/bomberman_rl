@@ -19,18 +19,20 @@ class BombeRLeWorldFeatureEng(BombeRLeWorld, gym.Env):
       # They must be gym.spaces objects
       # Example when using discrete actions:
       self.action_space = spaces.Discrete(len(s.ACTIONS))
-      self.observation_space = spaces.Dict({
-          #'field': spaces.MultiDiscrete([6] * (s.ROWS * s.COLS)),
-          'field': spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS)),
-          #'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
-          # TODO replace with "danger" situational awareness
-          #'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
-          #'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
-          'bomb_awareness': spaces.Box(low=np.array([-s.BOMB_POWER, -s.BOMB_POWER]), high=np.array([s.BOMB_POWER, s.BOMB_POWER])),
-          'bomb_on': spaces.Discrete(2)
-          #'other_bombs': spaces.MultiDiscrete([2] * 3),
-          #'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
-      })
+      self.observation_space = spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS))
+
+      #self.observation_space = spaces.Dict({
+      #    #'field': spaces.MultiDiscrete([6] * (s.ROWS * s.COLS)),
+      #    'field': spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS)),
+      #    #'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
+      #    # TODO replace with "danger" situational awareness
+      #    #'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
+      #    #'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
+      #    'bomb_awareness': spaces.Box(low=np.array([-s.BOMB_POWER, -s.BOMB_POWER]), high=np.array([s.BOMB_POWER, s.BOMB_POWER])),
+      #    'bomb_on': spaces.Discrete(2)
+      #    #'other_bombs': spaces.MultiDiscrete([2] * 3),
+      #    #'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
+      #})
     
     def reset(self):
         """Gym API reset"""

@@ -2,7 +2,7 @@ import argparse
 import gym
 
 import settings as s
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.env_util import make_vec_env
 from bombergymenv_callbacks import CustomCallback
 
@@ -63,6 +63,6 @@ gym.envs.register(
 )
 
 env = make_vec_env("BomberGym-v0", n_envs=4)
-model = PPO("MultiInputPolicy", env, verbose=1)
+model = DQN("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=args.total_timesteps, callback=callback)
 model.save("bombermodel")
