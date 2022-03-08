@@ -5,6 +5,7 @@ import getch
 import settings as s
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.env_checker import check_env
 from bombergymenv_callbacks import CustomCallback
 
 # Way to avoid tedious argparse
@@ -52,6 +53,8 @@ gym.envs.register(
 )
 
 env = gym.make('BomberGym-v0')
+check_env(env)
+
 # env = make_vec_env("BomberGym-v0", n_envs=4)
 env.reset()
 env.render()
@@ -71,7 +74,9 @@ while True:
         action = 4
     obs, rew, done, other = env.step(action)
     if not done:
-        env.render(events=other["events"], rewards=rew)
+        # temp?
+        feature_info = other["features"] if "features" in other else None
+        env.render(events=other["events"], rewards=rew, other=feature_info)
     else:
         print(other["events"], f"Reward: {rew}")
         break

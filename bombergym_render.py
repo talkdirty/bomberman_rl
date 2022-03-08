@@ -10,7 +10,7 @@ self = '💩'
 collision = '💥'
 space = '➖'
 
-def render(state, events=None, rewards=None, clear=True):
+def render(state, events=None, rewards=None, clear=True, other=None):
     if clear:
         print("\033c", end="")
     field = np.zeros((settings.ROWS, settings.COLS), dtype=str)
@@ -36,3 +36,5 @@ def render(state, events=None, rewards=None, clear=True):
         print(f'Events: {", ".join(events)}')
     if rewards:
         print(f'Rewards: {rewards}')
+    if other:
+        print(f'Other: {other}')

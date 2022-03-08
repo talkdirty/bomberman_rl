@@ -9,7 +9,6 @@ import numpy as np
 import events as e
 import settings as s
 from agents import Agent, SequentialAgentBackend
-from fallbacks import pygame
 from items import Coin, Explosion, Bomb
 
 import gym
@@ -21,12 +20,6 @@ import bombergym_render
 
 WorldArgs = namedtuple("WorldArgs",
                        ["no_gui", "fps", "turn_based", "update_interval", "save_replay", "replay", "make_video", "continue_without_training", "log_dir", "save_stats", "match_name", "seed", "silence_errors", "scenario"])
-
-
-class Trophy:
-    coin_trophy = pygame.transform.smoothscale(pygame.image.load(s.ASSET_DIR / 'coin.png'), (15, 15))
-    suicide_trophy = pygame.transform.smoothscale(pygame.image.load(s.ASSET_DIR / 'explosion_0.png'), (15, 15))
-    time_trophy = pygame.image.load(s.ASSET_DIR / 'hourglass.png')
 
 
 class BombeRLeWorld(gym.Env):
@@ -53,15 +46,9 @@ class BombeRLeWorld(gym.Env):
       # Define action and observation space
       # They must be gym.spaces objects
       # Example when using discrete actions:
+      # Needs to be overridden for now
       self.action_space = spaces.Discrete(len(s.ACTIONS))
-      self.observation_space = spaces.Dict({
-          'field': spaces.MultiDiscrete([5] * (s.ROWS * s.COLS)),
-          'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
-          'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
-          'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
-          'other_bombs': spaces.MultiDiscrete([2] * 3),
-          #'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
-      })
+      self.observation_space = spaces.Dict({})
       self.args = args
       self.setup_logging()
 
@@ -107,9 +94,9 @@ class BombeRLeWorld(gym.Env):
         other = {"events": events}
         return state_to_gym(orig_state), own_reward, done, other
 
-    def render(self, mode="human", rewards=None, events=None):
+    def render(self, mode="human", **kwargs):
         orig_state = self.get_state_for_agent(self.agents[0])
-        return bombergym_render.render(orig_state, events=events, rewards=rewards)
+        return bombergym_render.render(orig_state, **kwargs)
 
     def close(self):
         pass
@@ -228,7 +215,7 @@ class BombeRLeWorld(gym.Env):
                         self.logger.info(f'Agent <{a.name}> picked up coin at {(a.x, a.y)} and receives 1 point')
                         a.update_score(s.REWARD_COIN)
                         a.add_event(e.COIN_COLLECTED)
-                        a.trophies.append(Trophy.coin_trophy)
+                        #a.trophies.append(Trophy.coin_trophy)
 
     def update_explosions(self):
         # Progress explosions
@@ -292,13 +279,13 @@ class BombeRLeWorld(gym.Env):
                         if a is explosion.owner:
                             self.logger.info(f'Agent <{a.name}> blown up by own bomb')
                             a.add_event(e.KILLED_SELF)
-                            explosion.owner.trophies.append(Trophy.suicide_trophy)
+                            #explosion.owner.trophies.append(Trophy.suicide_trophy)
                         else:
                             self.logger.info(f'Agent <{a.name}> blown up by agent <{explosion.owner.name}>\'s bomb')
                             self.logger.info(f'Agent <{explosion.owner.name}> receives 1 point')
                             explosion.owner.update_score(s.REWARD_KILL)
                             explosion.owner.add_event(e.KILLED_OPPONENT)
-                            explosion.owner.trophies.append(pygame.transform.smoothscale(a.avatar, (15, 15)))
+                            #explosion.owner.trophies.append(pygame.transform.smoothscale(a.avatar, (15, 15)))
 
         # Remove hit agents
         for a in agents_hit:

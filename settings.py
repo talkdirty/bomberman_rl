@@ -1,8 +1,6 @@
 import logging
 from pathlib import Path
 
-from fallbacks import pygame
-
 ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
 
 # Game properties
@@ -49,12 +47,6 @@ REWARD_COIN = 1
 
 # User input
 INPUT_MAP = {
-    pygame.K_UP: 'UP',
-    pygame.K_DOWN: 'DOWN',
-    pygame.K_LEFT: 'LEFT',
-    pygame.K_RIGHT: 'RIGHT',
-    pygame.K_RETURN: 'WAIT',
-    pygame.K_SPACE: 'BOMB',
 }
 
 # Logging levels
