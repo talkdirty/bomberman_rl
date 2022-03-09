@@ -56,7 +56,7 @@ class BomberGymPlain(BombeRLeWorld, gym.Env):
         done = self.time_to_stop()
 
         feats = state_to_gym(orig_state)
-        other = {"events": events, "features": feats}
+        other = {"events": events, "features": feats, "orig_state": orig_state}
         return feats, own_reward, done, other
 
     def close(self):
