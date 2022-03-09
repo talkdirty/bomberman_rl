@@ -2,10 +2,9 @@ import numpy as np
 
 import bombergym.settings as s
 
-from .navigation import bomb_pathfinding_grid, pathfinder
+from .navigation import bomb_pathfinding_grid, pathfinder, Tile
 
 # TODO lots of unused features and old code
-
 # TODO refactor
 def feat_bomb_situational_awareness(state, bomb_range=s.BOMB_POWER):
     """"
@@ -52,17 +51,17 @@ def agents_to_features(game_state: dict) -> np.array:
 
 def gym_field(field: np.ndarray, others: list, self: tuple, coins: dict, bombs: list, explosion_map: np.ndarray) -> np.array:
     gym_f = np.zeros_like(field, dtype=np.int64)
-    gym_f[field == 1] = 1
-    gym_f[field == -1] = 2
+    gym_f[(field == 1).T] = Tile.CRATE
+    gym_f[(field == -1).T] = Tile.WALL
     for other in others:
-        gym_f[other[3][1], other[3][0]] = 3
+        gym_f[other[3][1], other[3][0]] = Tile.ENEMY
     for bomb in bombs:
-        gym_f[bomb[0][1], bomb[0][0]] = 6
-    gym_f[self[3][1], self[3][0]] = 4
+        gym_f[bomb[0][1], bomb[0][0]] = Tile.BOMB
+    gym_f[self[3][1], self[3][0]] = Tile.SELF
     c = gym_coins(coins)
-    gym_f[c == 1] = 5
+    gym_f[(c == 1).T] = Tile.COIN
 
-    gym_f[(explosion_map != 0).T] = 7
+    gym_f[(explosion_map != 0).T] = Tile.EXPLOSION
     
     return gym_f
 

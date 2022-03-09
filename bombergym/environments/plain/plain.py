@@ -19,7 +19,7 @@ class BomberGymPlain(BombeRLeWorld, gym.Env):
     def __init__(self, args, agents):
       super().__init__(args, agents)
       self.action_space = spaces.Discrete(len(s.ACTIONS))
-      self.observation_space = spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS))
+      self.observation_space = spaces.Box(low=-3, high=4, shape=(s.ROWS, s.COLS))
 
     def reset(self):
         """Gym API reset"""
@@ -55,9 +55,6 @@ class BomberGymPlain(BombeRLeWorld, gym.Env):
         own_reward = reward_from_events(events)
         done = self.time_to_stop()
 
-        #TODO temp some features here:
-        log_features = {
-        }
         feats = state_to_gym(orig_state)
         other = {"events": events, "features": feats}
         return feats, own_reward, done, other

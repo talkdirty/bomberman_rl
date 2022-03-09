@@ -1,4 +1,6 @@
 import numpy as np
+from bombergym.environments.plain.features import state_to_gym
+from bombergym.environments.plain.navigation import get_available_actions
 import bombergym.settings as s
 
 bomb = '💣'
@@ -38,3 +40,4 @@ def render(state, events=None, rewards=None, clear=True, other=None):
         print(f'Rewards: {rewards}')
     if other is not None:
         print(f'Other: {other}')
+    print(f'Walkable: {get_available_actions(state_to_gym(state), state)}')
