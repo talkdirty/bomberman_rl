@@ -1,11 +1,13 @@
 import argparse
-import gym
 
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 
 import bombergym.settings as s
+from bombergym.environments import register
 from bombergym.environments.callbacks import CustomCallback
+
+register()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--checkpoint-dir', required=True) 
@@ -56,14 +58,7 @@ if bomber.my_agent:
 for agent_name in bomber.agents:
     agents.append((agent_name, len(agents) < bomber.train))
 
-gym.envs.register(
-    id='BomberGym-v0',
-    entry_point='bombergym.environments.features:BombeRLeWorldFeatureEng',
-    max_episode_steps=401,
-    kwargs={ 'args': bomber, 'agents': agents }
-)
-
-env = make_vec_env("BomberGym-v0", n_envs=4)
+env = make_vec_env("BomberGym-plain", n_envs=4, env_kwargs={'args': bomber, 'agents': agents})
 model = DQN("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=args.total_timesteps, callback=callback)
 model.save("bombermodel")

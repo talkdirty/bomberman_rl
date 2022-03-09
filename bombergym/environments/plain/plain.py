@@ -1,39 +1,26 @@
-import numpy as np
-
 from bombergym.environments.base import BombeRLeWorld
 import bombergym.settings as s
-import bombergym.original.events as e
 
 import gym
 from gym import spaces
 
-from bombergym.agent_code.gym_surrogate_agent.features import agent_moved_out_of_bomb_tile, bomb_fled_event, reward_from_events, state_to_gym
+from .features import state_to_gym
+from .rewards import agent_moved_out_of_bomb_tile, bomb_fled_event, reward_from_events
 
-
-class BombeRLeWorldFeatureEng(BombeRLeWorld, gym.Env):
-    """Adapted environment with MORE feature engineering"""
+class BomberGymPlain(BombeRLeWorld, gym.Env):
+    """
+    Plain Version of the World.
+    * Observation space is a very simple matrix representation of the playing field
+      similar to the one rendered on screen
+    * Action space are the usual set of discrete actions.
+    * Some simple rewards are given.
+    """
 
     def __init__(self, args, agents):
       super().__init__(args, agents)
-      # Define action and observation space
-      # They must be gym.spaces objects
-      # Example when using discrete actions:
       self.action_space = spaces.Discrete(len(s.ACTIONS))
       self.observation_space = spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS))
 
-      #self.observation_space = spaces.Dict({
-      #    #'field': spaces.MultiDiscrete([6] * (s.ROWS * s.COLS)),
-      #    'field': spaces.Box(low=0, high=8, shape=(s.ROWS, s.COLS)),
-      #    #'bombs': spaces.MultiDiscrete([s.BOMB_TIMER + 1] * (s.ROWS * s.COLS)),
-      #    # TODO replace with "danger" situational awareness
-      #    #'explosions': spaces.MultiDiscrete([s.EXPLOSION_TIMER + 1] * (s.ROWS * s.COLS)),
-      #    #'coins': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS)),
-      #    'bomb_awareness': spaces.Box(low=np.array([-s.BOMB_POWER, -s.BOMB_POWER]), high=np.array([s.BOMB_POWER, s.BOMB_POWER])),
-      #    'bomb_on': spaces.Discrete(2)
-      #    #'other_bombs': spaces.MultiDiscrete([2] * 3),
-      #    #'others': spaces.MultiDiscrete([2] * (s.ROWS * s.COLS))
-      #})
-    
     def reset(self):
         """Gym API reset"""
         self.new_round()

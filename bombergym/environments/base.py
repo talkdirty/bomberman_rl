@@ -13,8 +13,6 @@ import bombergym.settings as s
 
 import gym
 from gym import spaces
-from bombergym.agent_code.gym_surrogate_agent.rewards import reward_from_events
-from bombergym.agent_code.gym_surrogate_agent.features import state_to_gym
 from bombergym.render import render
 
 
@@ -72,9 +70,7 @@ class BombeRLeWorld(gym.Env):
     
     def reset(self):
         """Gym API reset"""
-        self.new_round()
-        orig_state = self.get_state_for_agent(self.agents[0])
-        return state_to_gym(orig_state)
+        raise NotImplementedError("Pls implement in specific BomberGym-vX environment!")
 
     def step(self, action):
         raise NotImplementedError("Pls implement in specific BomberGym-vX environment!")

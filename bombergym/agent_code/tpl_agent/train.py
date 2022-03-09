@@ -3,7 +3,7 @@ from collections import namedtuple, deque
 import pickle
 from typing import List
 
-import events as e
+import bombergym.original.events as e
 from .callbacks import state_to_features
 
 # This is only an example!
@@ -96,7 +96,7 @@ def reward_from_events(self, events: List[str]) -> int:
         e.MOVED_RIGHT: -.1,
         e.MOVED_UP: -.1,
         e.MOVED_DOWN: -.1,
-        e.INVALID_ACTION. -1,
+        e.INVALID_ACTION: -1,
         e.KILLED_OPPONENT: 5,
         e.OPPONENT_ELIMINATED: 5,
         e.SURVIVED_ROUND: 2,

@@ -2,6 +2,9 @@ import gym
 import getch
 from stable_baselines3.common.env_checker import check_env
 import bombergym.settings as s
+from bombergym.environments import register
+
+register()
 
 # Way to avoid tedious argparse
 class BombeRLeSettings:
@@ -40,14 +43,7 @@ if bomber.my_agent:
 for agent_name in bomber.agents:
     agents.append((agent_name, len(agents) < bomber.train))
 
-gym.envs.register(
-    id='BomberGym-v0',
-    entry_point='bombergym.environments.features:BombeRLeWorldFeatureEng',
-    max_episode_steps=401,
-    kwargs={ 'args': bomber, 'agents': agents }
-)
-
-env = gym.make('BomberGym-v0')
+env = gym.make('BomberGym-v0', args=bomber, agents=agents)
 check_env(env)
 
 # env = make_vec_env("BomberGym-v0", n_envs=4)
