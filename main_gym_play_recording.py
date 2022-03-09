@@ -1,8 +1,7 @@
 import argparse
-import gym
 
 import pickle
-import bombergym_render
+import bombergym.render
 import time
 
 parser = argparse.ArgumentParser()
@@ -20,6 +19,6 @@ for episode in recording:
         obs, action, rew, done, other = step
         orig_state = other["orig_state"]
         if orig_state is not None:
-            bombergym_render.render(orig_state, events=other["events"], rewards=rew)
+            bombergym.render.render(orig_state, events=other["events"], rewards=rew)
         time.sleep(args.speed)
     time.sleep(args.speed_end)

@@ -1,9 +1,8 @@
 from collections import namedtuple, deque
 
-import pickle
 from typing import List
 
-import events as e
+import bombergym.original.events as e
 
 # This is only an example!
 Transition = namedtuple('Transition',

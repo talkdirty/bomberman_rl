@@ -1,4 +1,4 @@
-import events as e
+import bombergym.original.events as e
 
 def reward_from_events(events) -> int:
     """

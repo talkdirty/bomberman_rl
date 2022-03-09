@@ -6,22 +6,24 @@ from typing import List, Dict
 
 import numpy as np
 
-import events as e
-import settings as s
-from agents import Agent, SequentialAgentBackend
-from items import Coin, Explosion, Bomb
+import bombergym.original.events as e
+from bombergym.original.agents import Agent, SequentialAgentBackend
+from bombergym.original.items import Coin, Explosion, Bomb
+import bombergym.settings as s
 
 import gym
 from gym import spaces
-from agent_code.gym_surrogate_agent.rewards import reward_from_events
-from agent_code.gym_surrogate_agent.features import state_to_gym
-import bombergym_render
+from bombergym.agent_code.gym_surrogate_agent.rewards import reward_from_events
+from bombergym.agent_code.gym_surrogate_agent.features import state_to_gym
+from bombergym.render import render
 
 
 WorldArgs = namedtuple("WorldArgs",
                        ["no_gui", "fps", "turn_based", "update_interval", "save_replay", "replay", "make_video", "continue_without_training", "log_dir", "save_stats", "match_name", "seed", "silence_errors", "scenario"])
 
-
+"""
+Base environment, staying as close as possible to original environment.py.
+"""
 class BombeRLeWorld(gym.Env):
     metadata = {'render.modes': ['human']}
     logger: logging.Logger
@@ -75,28 +77,11 @@ class BombeRLeWorld(gym.Env):
         return state_to_gym(orig_state)
 
     def step(self, action):
-        action_orig = s.ACTIONS[action]
-        # Treat our own agent specially and dispatch its action
-        # WARNING alters game logic a bit, as we are usually not
-        # executed first (TODO relevant?)
-        self.perform_agent_action(self.agents[0], action_orig)
-        # Hook into original logic and dispatch world update
-        events = self.do_step()
-        orig_state = self.get_state_for_agent(self.agents[0])
-        # Provide facility for computing extra events with altered control
-        # flow, similar to train:game_events_occured in callback version
-        more_events = self.compute_extra_events(self.last_state, orig_state, action)
-        self.last_state = orig_state
-        if more_events:
-            events = events + more_events
-        own_reward = reward_from_events(events)
-        done = self.time_to_stop()
-        other = {"events": events}
-        return state_to_gym(orig_state), own_reward, done, other
+        raise NotImplementedError("Pls implement in specific BomberGym-vX environment!")
 
     def render(self, mode="human", **kwargs):
         orig_state = self.get_state_for_agent(self.agents[0])
-        return bombergym_render.render(orig_state, **kwargs)
+        return render(orig_state, **kwargs)
 
     def close(self):
         pass
@@ -175,7 +160,7 @@ class BombeRLeWorld(gym.Env):
             agent.add_event(e.MOVED_RIGHT)
         elif action == 'BOMB' and agent.bombs_left:
             self.logger.info(f'Agent <{agent.name}> drops bomb at {(agent.x, agent.y)}')
-            self.bombs.append(Bomb((agent.x, agent.y), agent, s.BOMB_TIMER, s.BOMB_POWER, agent.bomb_sprite))
+            self.bombs.append(Bomb((agent.x, agent.y), agent, s.BOMB_TIMER, s.BOMB_POWER))
             agent.bombs_left = False
             agent.add_event(e.BOMB_DROPPED)
         elif action == 'WAIT':

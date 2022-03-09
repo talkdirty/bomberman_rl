@@ -1,5 +1,5 @@
 import numpy as np
-import settings
+import bombergym.settings as s
 
 bomb = '💣'
 money = '💵'
@@ -13,7 +13,7 @@ space = '➖'
 def render(state, events=None, rewards=None, clear=True, other=None):
     if clear:
         print("\033c", end="")
-    field = np.zeros((settings.ROWS, settings.COLS), dtype=str)
+    field = np.zeros((s.ROWS, s.COLS), dtype=str)
     field[:, :] = space
 
     field[(state['field'] == 1).T] = box
@@ -36,5 +36,5 @@ def render(state, events=None, rewards=None, clear=True, other=None):
         print(f'Events: {", ".join(events)}')
     if rewards:
         print(f'Rewards: {rewards}')
-    if other:
+    if other is not None:
         print(f'Other: {other}')

@@ -1,8 +1,7 @@
 import numpy as np
 
-import settings as s
-import settings
-import events as e
+import bombergym.settings as s
+import bombergym.original.events as e
 
 from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
@@ -180,7 +179,7 @@ def gym_field(field: np.ndarray, others: list, self: tuple, coins: dict, bombs: 
     return gym_f
 
 def gym_bombs(bomb_state: list) -> np.array:
-    gym_b = np.zeros((settings.ROWS, settings.COLS), dtype=np.int64)
+    gym_b = np.zeros((s.ROWS, s.COLS), dtype=np.int64)
     for bomb in bomb_state:
         gym_b[bomb[0][1], bomb[0][0]] = bomb[1] + 1 # bomb[1]==0: about to explode
     return gym_b.flatten()
@@ -189,7 +188,7 @@ def gym_explosions(explosion_state: np.array) -> np.array:
     return explosion_state.flatten()
 
 def gym_coins(coin_state: list) -> np.ndarray:
-    feature = np.zeros((settings.ROWS, settings.COLS), dtype=np.int64)
+    feature = np.zeros((s.ROWS, s.COLS), dtype=np.int64)
     for coin in coin_state:
         feature[coin[0], coin[1]] = 1
     return feature
@@ -201,7 +200,7 @@ def gym_other_bombs(others: list) -> np.ndarray:
     return feature
 
 def gym_others(others: list) -> np.ndarray:
-    feature = np.zeros((settings.ROWS, settings.COLS), dtype=np.int64)
+    feature = np.zeros((s.ROWS, s.COLS), dtype=np.int64)
     for other in others:
         feature[other[3][1], other[3][0]] = 1
     return feature.flatten()

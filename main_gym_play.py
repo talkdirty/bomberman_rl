@@ -1,12 +1,7 @@
-import argparse
 import gym
-
 import getch
-import settings as s
-from stable_baselines3 import PPO
-from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.env_checker import check_env
-from bombergymenv_callbacks import CustomCallback
+import bombergym.settings as s
 
 # Way to avoid tedious argparse
 class BombeRLeSettings:
@@ -47,7 +42,7 @@ for agent_name in bomber.agents:
 
 gym.envs.register(
     id='BomberGym-v0',
-    entry_point='bombergymenv_features:BombeRLeWorldFeatureEng',
+    entry_point='bombergym.environments.features:BombeRLeWorldFeatureEng',
     max_episode_steps=401,
     kwargs={ 'args': bomber, 'agents': agents }
 )

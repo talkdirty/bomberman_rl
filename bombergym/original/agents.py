@@ -5,14 +5,12 @@ import os
 import queue
 from collections import defaultdict
 from inspect import signature
-from io import BytesIO
 from time import time
 from types import SimpleNamespace
 from typing import Tuple, Any
 
-import events as e
-import settings as s
-from fallbacks import pygame
+import bombergym.original.events as e
+import bombergym.settings as s
 
 AGENT_API = {
     "callbacks": {
@@ -55,28 +53,6 @@ class Agent:
 
     def __init__(self, agent_name, code_name, display_name, train: bool, backend: "AgentBackend", avatar_sprite_desc, bomb_sprite_desc):
         self.backend = backend
-
-        # Load custom avatar or standard robot avatar of assigned color
-        try:
-            if isinstance(avatar_sprite_desc, bytes):
-                self.avatar = pygame.image.load(BytesIO(avatar_sprite_desc))
-            else:
-                self.avatar = pygame.image.load(f'agent_code/{code_name}/avatar.png')
-            assert self.avatar.get_size() == (30, 30)
-        except Exception as e:
-            self.avatar = pygame.image.load(s.ASSET_DIR / f'robot_{avatar_sprite_desc}.png')
-        # Load custom bomb sprite
-        try:
-            if isinstance(avatar_sprite_desc, bytes):
-                self.bomb_sprite = pygame.image.load(BytesIO(bomb_sprite_desc))
-            else:
-                self.bomb_sprite = pygame.image.load(f'agent_code/{code_name}/bomb.png')
-            assert self.avatar.get_size() == (30, 30)
-        except Exception as e:
-            self.bomb_sprite = pygame.image.load(s.ASSET_DIR / f'bomb_{bomb_sprite_desc}.png')
-        # Prepare overlay that will indicate dead agent on the scoreboard
-        self.shade = pygame.Surface((30, 30), pygame.SRCALPHA)
-        self.shade.fill((0, 0, 0, 208))
 
         self.name = agent_name
         self.code_name = code_name
@@ -201,9 +177,9 @@ class AgentRunner:
         self.code_name = code_name
         self.result_queue = result_queue
 
-        self.callbacks = importlib.import_module('agent_code.' + self.code_name + '.callbacks')
+        self.callbacks = importlib.import_module('bombergym.agent_code.' + self.code_name + '.callbacks')
         if train:
-            self.train = importlib.import_module('agent_code.' + self.code_name + '.train')
+            self.train = importlib.import_module('bombergym.agent_code.' + self.code_name + '.train')
         for module_name in ["callbacks"] + (["train"] if train else []):
             module = getattr(self, module_name)
             for event_name, event_args in AGENT_API[module_name].items():
@@ -302,7 +278,7 @@ class SequentialAgentBackend(AgentBackend):
 
     def send_event(self, event_name, *event_args):
         prev_cwd = os.getcwd()
-        os.chdir(os.path.dirname(__file__) + f'/agent_code/{self.code_name}/')
+        os.chdir(os.path.dirname(__file__) + f'/../agent_code/{self.code_name}/')
         try:
             self.runner.process_event(event_name, *event_args)
         finally:

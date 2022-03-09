@@ -1,32 +1,21 @@
 import json
 import logging
 import pickle
-import subprocess
 from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
-from threading import Event
 from time import time
 from typing import List, Tuple, Dict
 
 import numpy as np
 
 import events as e
-import settings as s
+import bombergym.settings as s
 from agents import Agent, SequentialAgentBackend
-from fallbacks import pygame
 from items import Coin, Explosion, Bomb
-
-import settings
 
 WorldArgs = namedtuple("WorldArgs",
                        ["no_gui", "fps", "turn_based", "update_interval", "save_replay", "replay", "make_video", "continue_without_training", "log_dir", "save_stats", "match_name", "seed", "silence_errors", "scenario"])
-
-
-class Trophy:
-    coin_trophy = pygame.transform.smoothscale(pygame.image.load(s.ASSET_DIR / 'coin.png'), (15, 15))
-    suicide_trophy = pygame.transform.smoothscale(pygame.image.load(s.ASSET_DIR / 'explosion_0.png'), (15, 15))
-    time_trophy = pygame.image.load(s.ASSET_DIR / 'hourglass.png')
 
 
 class GenericWorld:
@@ -189,7 +178,6 @@ class GenericWorld:
                         self.logger.info(f'Agent <{a.name}> picked up coin at {(a.x, a.y)} and receives 1 point')
                         a.update_score(s.REWARD_COIN)
                         a.add_event(e.COIN_COLLECTED)
-                        a.trophies.append(Trophy.coin_trophy)
 
     def update_explosions(self):
         # Progress explosions
@@ -253,13 +241,11 @@ class GenericWorld:
                         if a is explosion.owner:
                             self.logger.info(f'Agent <{a.name}> blown up by own bomb')
                             a.add_event(e.KILLED_SELF)
-                            explosion.owner.trophies.append(Trophy.suicide_trophy)
                         else:
                             self.logger.info(f'Agent <{a.name}> blown up by agent <{explosion.owner.name}>\'s bomb')
                             self.logger.info(f'Agent <{explosion.owner.name}> receives 1 point')
                             explosion.owner.update_score(s.REWARD_KILL)
                             explosion.owner.add_event(e.KILLED_OPPONENT)
-                            explosion.owner.trophies.append(pygame.transform.smoothscale(a.avatar, (15, 15)))
 
         # Remove hit agents
         for a in agents_hit:
@@ -448,7 +434,6 @@ class BombeRLeWorld(GenericWorld):
                     next_think_time = a.base_timeout - (think_time - a.available_think_time)
                     self.logger.warning(f'Agent <{a.name}> exceeded think time by {think_time - a.available_think_time:.2f}s. Setting action to "WAIT" and decreasing available time for next round to {next_think_time:.2f}s.')
                     action = "WAIT"
-                    a.trophies.append(Trophy.time_trophy)
                     a.available_think_time = next_think_time
                 else:
                     self.logger.info(f'Agent <{a.name}> stayed within acceptable think time.')
@@ -510,152 +495,3 @@ class BombeRLeWorld(GenericWorld):
             # Send exit message to shut down agent
             self.logger.debug(f'Sending exit message to agent <{a.name}>')
             # todo multiprocessing shutdown
-
-
-class GUI:
-    def __init__(self, world: GenericWorld):
-        self.world = world
-        self.screenshot_dir = Path(__file__).parent / "screenshots"
-
-        # Initialize screen
-        self.screen = pygame.display.set_mode((s.WIDTH, s.HEIGHT))
-        pygame.display.set_caption('BombeRLe')
-        icon = pygame.image.load(s.ASSET_DIR / f'bomb_yellow.png')
-        pygame.display.set_icon(icon)
-
-        # Background and tiles
-        self.background = pygame.Surface((s.WIDTH, s.HEIGHT))
-        self.background = self.background.convert()
-        self.background.fill((0, 0, 0))
-        self.t_wall = pygame.image.load(s.ASSET_DIR / 'brick.png')
-        self.t_crate = pygame.image.load(s.ASSET_DIR / 'crate.png')
-
-        # Font for scores and such
-        font_name = s.ASSET_DIR / 'emulogic.ttf'
-        self.fonts = {
-            'huge': pygame.font.Font(font_name, 20),
-            'big': pygame.font.Font(font_name, 16),
-            'medium': pygame.font.Font(font_name, 10),
-            'small': pygame.font.Font(font_name, 8),
-        }
-
-        self.frame = 0
-
-    def render_text(self, text, x, y, color, halign='left', valign='top', size='medium', aa=False):
-        text_surface = self.fonts[size].render(text, aa, color)
-        text_rect = text_surface.get_rect()
-        if halign == 'left':   text_rect.left = x
-        if halign == 'center': text_rect.centerx = x
-        if halign == 'right':  text_rect.right = x
-        if valign == 'top':    text_rect.top = y
-        if valign == 'center': text_rect.centery = y
-        if valign == 'bottom': text_rect.bottom = y
-        self.screen.blit(text_surface, text_rect)
-
-    def render(self):
-        self.screen.blit(self.background, (0, 0))
-
-        if self.world.round == 0:
-            return
-
-        self.frame += 1
-        pygame.display.set_caption(f'BombeRLe | Round #{self.world.round}')
-
-        # World
-        for x in range(self.world.arena.shape[1]):
-            for y in range(self.world.arena.shape[0]):
-                if self.world.arena[x, y] == -1:
-                    self.screen.blit(self.t_wall,
-                                     (s.GRID_OFFSET[0] + s.GRID_SIZE * x, s.GRID_OFFSET[1] + s.GRID_SIZE * y))
-                if self.world.arena[x, y] == 1:
-                    self.screen.blit(self.t_crate,
-                                     (s.GRID_OFFSET[0] + s.GRID_SIZE * x, s.GRID_OFFSET[1] + s.GRID_SIZE * y))
-        self.render_text(f'Step {self.world.step:d}', s.GRID_OFFSET[0], s.HEIGHT - s.GRID_OFFSET[1] / 2, (64, 64, 64),
-                         valign='center', halign='left', size='medium')
-
-        # Items
-        for bomb in self.world.bombs:
-            bomb.render(self.screen, s.GRID_OFFSET[0] + s.GRID_SIZE * bomb.x, s.GRID_OFFSET[1] + s.GRID_SIZE * bomb.y)
-        for coin in self.world.coins:
-            if coin.collectable:
-                coin.render(self.screen, s.GRID_OFFSET[0] + s.GRID_SIZE * coin.x,
-                            s.GRID_OFFSET[1] + s.GRID_SIZE * coin.y)
-
-        # Agents
-        for agent in self.world.active_agents:
-            agent.render(self.screen, s.GRID_OFFSET[0] + s.GRID_SIZE * agent.x,
-                         s.GRID_OFFSET[1] + s.GRID_SIZE * agent.y)
-
-        # Explosions
-        for explosion in self.world.explosions:
-            explosion.render(self.screen)
-
-        # Scores
-        # agents = sorted(self.agents, key=lambda a: (a.score, -a.mean_time), reverse=True)
-        agents = self.world.agents
-        leading = max(agents, key=lambda a: (a.score, a.name))
-        y_base = s.GRID_OFFSET[1] + 15
-        for i, a in enumerate(agents):
-            bounce = 0 if (a is not leading or self.world.running) else np.abs(10 * np.sin(5 * time()))
-            a.render(self.screen, 600, y_base + 50 * i - 15 - bounce)
-            self.render_text(a.display_name, 650, y_base + 50 * i,
-                             (64, 64, 64) if a.dead else (255, 255, 255),
-                             valign='center', size='small')
-            for j, trophy in enumerate(a.trophies):
-                self.screen.blit(trophy, (660 + 10 * j, y_base + 50 * i + 12))
-            self.render_text(f'{a.score:d}', 830, y_base + 50 * i, (255, 255, 255),
-                             valign='center', halign='right', size='big')
-            self.render_text(f'{a.total_score:d}', 890, y_base + 50 * i, (64, 64, 64),
-                             valign='center', halign='right', size='big')
-
-        # End of round info
-        if not self.world.running:
-            x_center = (s.WIDTH - s.GRID_OFFSET[0] - s.COLS * s.GRID_SIZE) / 2 + s.GRID_OFFSET[0] + s.COLS * s.GRID_SIZE
-            color = np.int_((255 * (np.sin(3 * time()) / 3 + .66),
-                             255 * (np.sin(4 * time() + np.pi / 3) / 3 + .66),
-                             255 * (np.sin(5 * time() - np.pi / 3) / 3 + .66)))
-            self.render_text(leading.display_name, x_center, 320, color,
-                             valign='top', halign='center', size='huge')
-            self.render_text('has won the round!', x_center, 350, color,
-                             valign='top', halign='center', size='big')
-            leading_total = max(self.world.agents, key=lambda a: (a.total_score, a.display_name))
-            if leading_total is leading:
-                self.render_text(f'{leading_total.display_name} is also in the lead.', x_center, 390, (128, 128, 128),
-                                 valign='top', halign='center', size='medium')
-            else:
-                self.render_text(f'But {leading_total.display_name} is in the lead.', x_center, 390, (128, 128, 128),
-                                 valign='top', halign='center', size='medium')
-
-        if self.world.running and self.world.args.make_video:
-            self.world.logger.debug(f'Saving screenshot for frame {self.frame}')
-            pygame.image.save(self.screen, str(self.screenshot_dir / f'{self.world.round_id}_{self.frame:05d}.png'))
-
-    def make_video(self):
-        # Turn screenshots into videos
-        assert self.world.args.make_video is not False
-
-        if self.world.args.make_video is True:
-            files = [self.screenshot_dir / f'{self.world.round_id}_video.mp4',
-                     self.screenshot_dir / f'{self.world.round_id}_video.webm']
-        else:
-            files = [Path(self.world.args.make_video)]
-
-        self.world.logger.debug(f'Turning screenshots into video')
-
-        PARAMS = {
-            ".mp4": ['-preset', 'veryslow', '-tune', 'animation', '-crf', '5', '-c:v', 'libx264',
-                     '-pix_fmt', 'yuv420p'],
-            ".webm": ['-threads', '2', '-tile-columns', '2', '-frame-parallel', '0', '-g', '100', '-speed', '1', '-pix_fmt', 'yuv420p', '-qmin', '0', '-qmax', '10', '-crf', '5', '-b:v', '2M', '-c:v', 'libvpx-vp9', ]
-        }
-
-        for video_file in files:
-            subprocess.call([
-                'ffmpeg', '-y', '-framerate', f'{self.world.args.fps}',
-                '-f', 'image2', '-pattern_type', 'glob',
-                '-i', self.screenshot_dir / f'{self.world.round_id}_*.png',
-                *PARAMS[video_file.suffix],
-                video_file
-            ])
-        self.world.logger.info("Done writing videos.")
-        for f in self.screenshot_dir.glob(f'{self.world.round_id}_*.png'):
-            f.unlink()

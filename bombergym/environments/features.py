@@ -1,13 +1,13 @@
 import numpy as np
 
-from bombergymenv import BombeRLeWorld
-import settings as s
-import events as e
+from bombergym.environments.base import BombeRLeWorld
+import bombergym.settings as s
+import bombergym.original.events as e
 
 import gym
 from gym import spaces
 
-from agent_code.gym_surrogate_agent.features import agent_moved_out_of_bomb_tile, bomb_fled_event, reward_from_events, state_to_gym
+from bombergym.agent_code.gym_surrogate_agent.features import agent_moved_out_of_bomb_tile, bomb_fled_event, reward_from_events, state_to_gym
 
 
 class BombeRLeWorldFeatureEng(BombeRLeWorld, gym.Env):
