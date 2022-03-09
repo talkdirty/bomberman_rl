@@ -58,7 +58,7 @@ if bomber.my_agent:
 for agent_name in bomber.agents:
     agents.append((agent_name, len(agents) < bomber.train))
 
-env = make_vec_env("BomberGym-plain", n_envs=4, env_kwargs={'args': bomber, 'agents': agents})
+env = make_vec_env("BomberGym-v0", n_envs=4, env_kwargs={'args': bomber, 'agents': agents})
 model = DQN("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=args.total_timesteps, callback=callback)
 model.save("bombermodel")
