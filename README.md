@@ -20,7 +20,7 @@ We provide different versions of the bomberman game as environments. All Gym obs
 
 ### BomberGym-v0
 
-`BomberGym-v0` is the most basic and naive environment. We simply translate the `game_state` into a 2-dimensional array:
+`BomberGym-v0` is the most basic and naive environment. It is inspired by the gym classic control environments for Atari games, where simply the RGB values or even the 128-byte RAM is given as observation space. We simply translate the `game_state` into a 2-dimensional array (kind of like a RGB image version of the game, just more condensed):
 
 ```python
 >>> import gym
@@ -30,7 +30,7 @@ We provide different versions of the bomberman game as environments. All Gym obs
 >>> register() # Register our custom environments to gym
 >>> settings, agents = coin_heaven() # Play in coin heaven scenario
 >>> 
->>> env = gym.make('BomberGym-v1', args=settings, agents=agents)
+>>> env = gym.make('BomberGym-v0', args=settings, agents=agents)
 >>> env.reset()
 array([[-2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2],
        [-2,  0,  0,  0,  0,  0,  0,  0,  3,  0,  3,  0,  3,  0,  3,  3, -2],
@@ -64,7 +64,26 @@ SELF = 2
 COIN = 3
 ```
 
-So far, we have not achieved great results from this environment alone.
+So far, we have not achieved great results from this environment alone. Even when using an advanced RL policy. A reason could be that the Markov property is not entirely fulfilled here - the information of *when* a bomb will explode is not encoded. As such, the agent doesn't really learn how to not blow up.
+
+The following rewards are defined for this environment (as in the original game scaffolding, they are based on events - the sum of all occuring events is returned as the step reward):
+
+```
+e.COIN_COLLECTED: 5,
+e.INVALID_ACTION: -1,
+e.KILLED_OPPONENT: 5,
+e.SURVIVED_ROUND: 1,
+e.MOVED_DOWN: -.1,
+e.MOVED_LEFT: -.1,
+e.MOVED_RIGHT: -.1,
+e.MOVED_UP: -.1,
+e.WAITED: -.3,
+BOMB_FLED: 3,
+WALKS_INTO_BOMB_RADIUS: -3,
+AGENT_MOVED_OUT_OF_BOMB_TILE: 2
+```
+
+Notably, `BOMB_FLED` will reward the agent if it was in blast radius, but fled. `WALKS_INTO_BOMB_RADIUS` does the opposite. `AGENT_MOVED_OUT_OF_BOMB_TILE` tries to give an incentive to put a movement command after placing a bomb. The only thing we got from these events though, is an agent that will place a bomb, duck behind a corner, place another bomb, et cetera - exploiting the `BOMB_FLED` reward, but not making progress. So, probably not a great idea, but interesting nonetheless.
 
 ### BomberGym-v1
 
