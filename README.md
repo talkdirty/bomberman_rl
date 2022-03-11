@@ -1,5 +1,7 @@
 # bomberman_rl - BomberGym
 
+![Image](./assets/bombergym.png)
+
 Bombergym features a rewrite of the original bomberman_rl game engine in order to be compatible with [OpenAI Gym](https://gym.openai.com/). By providing a gym compatible environment of bomberman, we hope to make our lives a bit easier: 
 
 1. We want to be able to quickly experiment and iterate on cutting edge RL algorithms - many Deep RL libraries, for example [stable_baselines3](https://stable-baselines3.readthedocs.io/en/master/), can simply be directly plugged into an existing gym environment.
@@ -43,7 +45,7 @@ array([[-2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2],
        [-2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2]])
 ```
 
-The array is simply a representation of the field as we see in the guy, where the numbers have the following meanings:
+The array is simply a representation of the field as we see in the GUI, where the numbers have the following meanings:
 
 ```
 EXPLOSION = -4
