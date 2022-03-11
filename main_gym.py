@@ -1,6 +1,6 @@
 import argparse
 
-from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 
 import bombergym.settings as s
@@ -31,8 +31,8 @@ class BombeRLeSettings:
     ]
     train = 1
     continue_without_training = False
-    #scenario = 'coin-heaven'
-    scenario = 'classic'
+    scenario = 'coin-heaven'
+    #scenario = 'classic'
     seed = None
     n_rounds = 10 # Has no effect
     save_replay = False # Has no effect
@@ -58,7 +58,7 @@ if bomber.my_agent:
 for agent_name in bomber.agents:
     agents.append((agent_name, len(agents) < bomber.train))
 
-env = make_vec_env("BomberGym-v0", n_envs=4, env_kwargs={'args': bomber, 'agents': agents})
-model = DQN("MlpPolicy", env, verbose=1)
+env = make_vec_env("BomberGym-v1", n_envs=4, env_kwargs={'args': bomber, 'agents': agents})
+model = PPO("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=args.total_timesteps, callback=callback)
 model.save("bombermodel")

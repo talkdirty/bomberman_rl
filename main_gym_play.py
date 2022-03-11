@@ -12,12 +12,12 @@ class BombeRLeSettings:
     my_agent = None
     agents = [
         'gym_surrogate_agent', # Important, needs to be first. Represents our agent
-        #'random_agent', # Possibility to add other agents here
+        'random_agent', # Possibility to add other agents here
     ]
     train = 1
     continue_without_training = False
-    #scenario = 'coin-heaven'
-    scenario = 'classic'
+    scenario = 'coin-heaven'
+    #scenario = 'classic'
     seed = None
     n_rounds = 10 # Has no effect
     save_replay = False # Has no effect
@@ -43,7 +43,7 @@ if bomber.my_agent:
 for agent_name in bomber.agents:
     agents.append((agent_name, len(agents) < bomber.train))
 
-env = gym.make('BomberGym-v0', args=bomber, agents=agents)
+env = gym.make('BomberGym-v1', args=bomber, agents=agents)
 check_env(env)
 
 # env = make_vec_env("BomberGym-v0", n_envs=4)
