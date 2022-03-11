@@ -1,14 +1,20 @@
 # bomberman_rl - BomberGym
 
-![Image](./assets/bombergym.png)
-
 Bombergym features a rewrite of the original bomberman_rl game engine in order to be compatible with [OpenAI Gym](https://gym.openai.com/). By providing a gym compatible environment of bomberman, we hope to make our lives a bit easier: 
 
 1. We want to be able to quickly experiment and iterate on cutting edge RL algorithms - many Deep RL libraries, for example [stable_baselines3](https://stable-baselines3.readthedocs.io/en/master/), can simply be directly plugged into an existing gym environment.
 2. We can use the existing ecosystem and libraries to avoid having to write boilerplate. For example, we can use `make_vec_env` from `stable_baselines3` to create vectorized environments and train our agent in parallel without having to worry how to do this with the existing game engine.
 3. We can make development and collaboration easier and more streamlined by clearly separating what makes up the environment (observation space, action space, rewards) and what makes up our reinforcement learning algorithm and training routines.
 
+Also, we completely ripped out pygame (sorry, it's fun and looks great, but not practical), and replaced it with a CLI based rendering of the game:
+
+![Image](./assets/bombergym.png)
+
 ## Usage
+
+To play the game in the terminal, run `python main_gym_play.py`. Requires some unicode support in your terminal (it's 2022). The 💩 is the agent. Vim Keybindings (h, j, k, l: movement, b: place a bomb, any other key: wait). We will show you rewards and also the observation space and events after each step. 
+
+## Environments
 
 We provide different versions of the bomberman game as environments. All Gym observation spaces are directly and purely computed from the original `game_state` provided to allow our model to plug into the original game again easily for the competition. 
 
