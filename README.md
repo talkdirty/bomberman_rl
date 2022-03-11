@@ -87,6 +87,45 @@ Notably, `BOMB_FLED` will reward the agent if it was in blast radius, but fled. 
 
 ### BomberGym-v1
 
-Work in Progress!
-The idea is to have a much reduced observation space.
 We have some preliminary promising results with BomberGym-v1.
+
+```
+>>> env=gym.make('BomberGym-v1', args=settings,agents=agents)
+>>> env.reset()
+Out[5]: 
+array([0.        , 0.        , 0.        , 0. # bomb awareness       
+     , 0.        , 0.        , 0.        , 0. # explosion awareness       
+     , 0.        , 0.        , 0.        , 0. # crate awareness       
+     , 0.07142857, 0.        , 0.        ,0.11111111 # coin awareness
+     , 0.        , 0.        , 0.        , 0. # enemy awareness      
+     , 1.        , 0.        , 0.        , 1. # wall awareness       
+     , 0. # is a bomb under me?      
+     ])
+```
+
+Awareness features are 1 divided by the tile distance to a certain thing in 
+any direction. 4 features for a given thing, left, right, top, bottom.
+With this, we can solve coin_heaven, but slow: literally only encodes the line
+of sight of the agent, so has to spend a long time randomly searching once a
+"signal" to a coin is lost.
+
+Rewards given:
+
+```
+e.COIN_COLLECTED: 5,
+e.INVALID_ACTION: -1,
+e.KILLED_OPPONENT: 5,
+e.SURVIVED_ROUND: 1,
+e.MOVED_DOWN: -.1,
+e.MOVED_LEFT: -.1,
+e.MOVED_RIGHT: -.1,
+e.MOVED_UP: -.1,
+e.WAITED: -.3,
+```
+
+### BomberGym-v2
+
+Work in Progress!
+Idea: try to incorporate some global awareness features.
+CONCRETE IDEA: Taxicab norm to nearest {thing}, if going left, right, top, bottom!
+

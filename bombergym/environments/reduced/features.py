@@ -69,6 +69,7 @@ def get_objects(game_state: dict):
     # TODO: try dividing distance by bomb timer: np.abs(s.BOMB_TIMER)
     grid = plain_features.state_to_gym(game_state)
     coords = game_state['self'][3]
+    
     bomb_r = get_x_distance_if_reachable(grid, coords, Tile.BOMB, +1)
     bomb_l = get_x_distance_if_reachable(grid, coords, Tile.BOMB, -1)
     bomb_t = get_y_distance_if_reachable(grid, coords, Tile.BOMB, +1)
