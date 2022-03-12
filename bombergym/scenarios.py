@@ -30,6 +30,9 @@ class BasicSettings:
 class CoinHeavenSettings(BasicSettings):
     scenario = 'coin-heaven'
 
+class ClassicSettings(BasicSettings):
+    scenario = 'classic'
+
 def get_agents(settings):
     agents = []
     if settings.train == 0 and not settings.continue_without_training:
@@ -47,5 +50,13 @@ def coin_heaven():
     Basic coin heaven scenario. Only the agent. No enemies. No crates.
     """
     settings = CoinHeavenSettings()
+    agents = get_agents(settings)
+    return settings, agents
+
+def classic():
+    """
+    Classic scenario. Only the agent. No enemies.
+    """
+    settings = ClassicSettings()
     agents = get_agents(settings)
     return settings, agents
