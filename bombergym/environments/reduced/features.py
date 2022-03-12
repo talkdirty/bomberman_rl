@@ -69,7 +69,7 @@ def get_objects(game_state: dict):
     # TODO: try dividing distance by bomb timer: np.abs(s.BOMB_TIMER)
     grid = plain_features.state_to_gym(game_state)
     coords = game_state['self'][3]
-    
+
     bomb_r = get_x_distance_if_reachable(grid, coords, Tile.BOMB, +1)
     bomb_l = get_x_distance_if_reachable(grid, coords, Tile.BOMB, -1)
     bomb_t = get_y_distance_if_reachable(grid, coords, Tile.BOMB, +1)
@@ -111,7 +111,7 @@ def get_is_on_bomb(game_state: dict):
 def state_to_gym(game_state: dict) -> dict:
     """
     :param game_state:  A dictionary describing the current game board.
-    :return: dict compatible with gym observation space
+    :return: array compatible with gym observation space
 
     * Observation space is a low dimensional vector
       1. Danger (r, l, t, b), high if close to bomb or explosion

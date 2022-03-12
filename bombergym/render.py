@@ -45,9 +45,9 @@ def render(state, events=None, rewards=None, clear=True, other=None):
     #    if i % 4 == 0:
     #        print()
 
-    #if other is not None:
-    #    for i in range(len(other)):
-    #        print(f'{other[i]}\t', end='')
-    #        if i % 4 == 0:
-    #            print()
+    if other is not None:
+        for i in range(len(other)):
+            print(f'{other[i]:.02f}\t', end='')
+            if (i+1) % 4 == 0:
+                print()
     #print(f'Walkable: {get_available_actions(state_to_gym(state), state)}')

@@ -15,3 +15,9 @@ def register():
         entry_point=f'{__package__}.reduced.reduced:BomberGymReduced',
         max_episode_steps=401,
     )
+
+    gym.envs.register(
+        id='BomberGym-v2',
+        entry_point=f'{__package__}.manhattan.manhattan:BomberGymReducedManhattanNorm',
+        max_episode_steps=401,
+    )
