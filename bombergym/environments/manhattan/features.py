@@ -14,7 +14,6 @@ def pathfinding_grid(grid):
     g[grid == Tile.SELF] = -1
     return Grid(matrix=g)
 
-# TODO untested
 def pathfinding_distance(grid, own_coords, tile):
     x, y = own_coords
     g = pathfinding_grid(grid)

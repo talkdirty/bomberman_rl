@@ -12,7 +12,11 @@ Also, we completely ripped out pygame (sorry, it's fun and looks great, but not 
 
 ## Usage
 
-To play the game in the terminal, run `python main_gym_play.py`. Requires some unicode support in your terminal (it's 2022). The 💩 is the agent. Vim Keybindings (h, j, k, l: movement, b: place a bomb, any other key: wait). We will show you rewards and also the observation space and events after each step. 
+**Installing**: After activating whatever Python virtual env management, run `pip install -r requirements.txt`. Tested on Python 3.9. The underlying Bomberman-RL project requires Python 3.8+.
+
+**Testing**: To run unit tests, run `python -m unittest`
+
+**Playing the game:** To play the game in the terminal, run `python main_gym_play.py`. Requires some unicode support in your terminal (it's 2022). The 💩 is the agent. Vim Keybindings (h, j, k, l: movement, b: place a bomb, any other key: wait). We will show you rewards and also the observation space and events after each step. 
 
 ## Environments
 
@@ -128,4 +132,3 @@ e.WAITED: -.3,
 Work in Progress!
 Idea: try to incorporate some global awareness features.
 CONCRETE IDEA: Taxicab norm to nearest {thing}, if going left, right, top, bottom!
-
