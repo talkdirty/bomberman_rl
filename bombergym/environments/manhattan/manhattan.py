@@ -1,3 +1,4 @@
+from os import stat
 from bombergym.environments.base import BombeRLeWorld
 import bombergym.settings as s
 
@@ -16,10 +17,11 @@ class BomberGymReducedManhattanNorm(BombeRLeWorld, gym.Env):
     * Some simple rewards are given.
     """
 
-    def __init__(self, args, agents):
+    def __init__(self, args, agents, state_fn=state_to_gym):
       super().__init__(args, agents)
       self.action_space = spaces.Discrete(len(s.ACTIONS))
       self.observation_space = spaces.Box(low=-1, high=1, shape=(25,))
+      self.state_fn = state_fn
 
     def reset(self):
         """Gym API reset"""
@@ -48,7 +50,7 @@ class BomberGymReducedManhattanNorm(BombeRLeWorld, gym.Env):
         own_reward = reward_from_events(events)
         done = self.time_to_stop()
 
-        feats = state_to_gym(orig_state)
+        feats = self.state_fn(orig_state)
         other = {"events": events, "features": feats, "orig_state": orig_state}
         return feats, own_reward, done, other
 

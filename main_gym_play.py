@@ -7,7 +7,7 @@ from bombergym.environments import register
 register()
 settings, agents = coin_heaven()
 
-env = gym.make('BomberGym-v2', args=settings, agents=agents)
+env = gym.make('BomberGym-v3', args=settings, agents=agents)
 check_env(env)
 
 # env = make_vec_env("BomberGym-v0", n_envs=4)
