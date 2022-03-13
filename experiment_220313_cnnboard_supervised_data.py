@@ -15,8 +15,8 @@ register()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--output', help='Training data output pickle', required=True)
-parser.add_argument('--n', help='Total number of data generation jobs', default=10)
-parser.add_argument('--episodes', help='Total number of episodes to run per data generation job', default=10)
+parser.add_argument('--n', help='Total number of data generation jobs', type=int, default=10)
+parser.add_argument('--episodes', help='Total number of episodes to run per data generation job', type=int, default=10)
 
 class Self:
     logger = logging.getLogger("Self")
