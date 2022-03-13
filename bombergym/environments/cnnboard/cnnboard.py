@@ -1,14 +1,13 @@
-from os import stat
 from bombergym.environments.base import BombeRLeWorld
 import bombergym.settings as s
 
 import gym
 from gym import spaces
 
-from bombergym.environments.reduced.rewards import reward_from_events
 from .features import state_to_gym
+from bombergym.environments.manhattan_v2.rewards import reward_from_events
 
-class BomberGymReducedManhattanNorm(BombeRLeWorld, gym.Env):
+class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
     """
     Like reduced environment, but instead of "stupid" line-of-sight level
     features, indicate the manhattan distance to the closest <thing> in
@@ -20,7 +19,7 @@ class BomberGymReducedManhattanNorm(BombeRLeWorld, gym.Env):
     def __init__(self, args, agents, state_fn=state_to_gym, reward_fn=reward_from_events):
       super().__init__(args, agents)
       self.action_space = spaces.Discrete(len(s.ACTIONS))
-      self.observation_space = spaces.Box(low=-1, high=1, shape=(25,))
+      self.observation_space = spaces.Box(low=-1, high=1, shape=(s.COLS, s.ROWS, 5))
       self.state_fn = state_fn
       self.reward_fn = reward_fn
 

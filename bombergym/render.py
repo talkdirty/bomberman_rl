@@ -4,6 +4,8 @@ from bombergym.environments.reduced.features import state_to_gym
 from bombergym.environments.plain.navigation import get_available_actions
 import bombergym.settings as s
 
+np.set_printoptions(threshold=np.inf)
+
 bomb = '💣'
 money = '💵'
 wall = '🧱'
@@ -45,9 +47,13 @@ def render(state, events=None, rewards=None, clear=True, other=None):
     #    if i % 4 == 0:
     #        print()
 
+    #if other is not None:
+    #    for i in range(len(other)):
+    #        print(f'{other[i]:.02f}\t', end='')
+    #        if (i+1) % 4 == 0:
+    #            print()
     if other is not None:
-        for i in range(len(other)):
-            print(f'{other[i]:.02f}\t', end='')
-            if (i+1) % 4 == 0:
-                print()
+        with np.printoptions(threshold=np.inf, precision=2):
+            print(other.shape)
+            print(other[:, :, 4])
     #print(f'Walkable: {get_available_actions(state_to_gym(state), state)}')

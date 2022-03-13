@@ -1,6 +1,7 @@
 import gym 
 
 import bombergym.environments.manhattan_v2.features
+import bombergym.environments.manhattan_v2.rewards
 
 def register():
     """
@@ -28,5 +29,14 @@ def register():
         id='BomberGym-v3',
         entry_point=f'{__package__}.manhattan.manhattan:BomberGymReducedManhattanNorm',
         max_episode_steps=401,
-        kwargs={'state_fn': bombergym.environments.manhattan_v2.features.state_to_gym}
+        kwargs={
+            'state_fn': bombergym.environments.manhattan_v2.features.state_to_gym,
+            'reward_fn': bombergym.environments.manhattan_v2.rewards.reward_from_events
+        }
+    )
+
+    gym.envs.register(
+        id='BomberGym-v4',
+        entry_point=f'{__package__}.cnnboard.cnnboard:BomberGymCnnBoard',
+        max_episode_steps=401,
     )
