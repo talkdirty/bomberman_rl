@@ -22,7 +22,7 @@ class Self:
     logger = logging.getLogger("Self")
 
 @ray.remote
-def work(n_episodes=100):
+def work(output_name, n_episodes=100):
     register()
     settings, agents = classic_with_opponents()
     env = gym.make("BomberGym-v4", args=settings, agents=agents)
@@ -51,15 +51,16 @@ def work(n_episodes=100):
                 print(f'Adding winning episode {i}')
                 global_buffer.append(episode_buffer)
                 break
+    with open(output_name, 'wb') as fd:
+        pickle.dump(global_buffer, fd)
     return global_buffer
     
 
 if __name__ == '__main__':
     args = parser.parse_args()
     jobs = []
+    os.makedirs(args.output, exist_ok=True)
     for i in range(args.n):
-        jobs.append(work.remote(n_episodes=args.episodes))
-    objs = ray.get(jobs)
-    with open(args.output, 'wb') as fd:
-        pickle.dump(objs, fd)
+        jobs.append(work.remote(f"{args.output}/data{i}.pckl", n_episodes=args.episodes))
+    ray.get(jobs)
 
