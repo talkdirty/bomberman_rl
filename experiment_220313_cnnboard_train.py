@@ -36,10 +36,10 @@ class GameplayDataset:
         self.things = []
         with open(pckl_path, 'rb') as fd:
             self.data = pickle.load(fd)
-        for device_batch in self.data:
-            for episode in device_batch:
-                for data in episode:
-                    old_state, action, rew, obs = data
+        for episode in self.data:
+            for data in episode:
+                for step in data:
+                    old_state, action, rew, obs = step
                     self.things.append((old_state, action))
 
     def __len__(self):
