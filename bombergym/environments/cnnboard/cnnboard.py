@@ -27,10 +27,19 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
         """Gym API reset"""
         self.new_round()
         orig_state = self.get_state_for_agent(self.agents[0])
+        self.initial_state = orig_state
         return state_to_gym(orig_state)
 
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
         return []
+
+    def did_i_die(self):
+        died = True
+        for agent in self.active_agents:
+            if agent.code_name == "gym_surrogate_agent":
+                died = False
+                break
+        return died
 
     def step(self, action):
         action_orig = s.ACTIONS[action]

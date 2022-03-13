@@ -33,6 +33,15 @@ class CoinHeavenSettings(BasicSettings):
 class ClassicSettings(BasicSettings):
     scenario = 'classic'
 
+class ClassicSettingsEnemies(BasicSettings):
+    scenario = 'classic'
+    agents = [
+        'gym_surrogate_agent', 
+        'rule_based_agent',
+        'rule_based_agent',
+        'rule_based_agent',
+    ]
+
 def get_agents(settings):
     agents = []
     if settings.train == 0 and not settings.continue_without_training:
@@ -58,5 +67,13 @@ def classic():
     Classic scenario. Only the agent. No enemies.
     """
     settings = ClassicSettings()
+    agents = get_agents(settings)
+    return settings, agents
+
+def classic_with_opponents():
+    """
+    Classic scenario. 3 other agents.
+    """
+    settings = ClassicSettingsEnemies()
     agents = get_agents(settings)
     return settings, agents

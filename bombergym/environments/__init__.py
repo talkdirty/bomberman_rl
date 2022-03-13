@@ -3,10 +3,17 @@ import gym
 import bombergym.environments.manhattan_v2.features
 import bombergym.environments.manhattan_v2.rewards
 
+REGISTERED = False
+
 def register():
     """
-    Registers all custom environments to gym
+    Registers all custom environments to gym, if not already
     """
+    global REGISTERED
+    if REGISTERED:
+        return
+    REGISTERED = True
+
     gym.envs.register(
         id='BomberGym-v0',
         entry_point=f'{__package__}.plain.plain:BomberGymPlain',

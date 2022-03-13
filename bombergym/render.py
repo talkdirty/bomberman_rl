@@ -52,8 +52,8 @@ def render(state, events=None, rewards=None, clear=True, other=None):
     #        print(f'{other[i]:.02f}\t', end='')
     #        if (i+1) % 4 == 0:
     #            print()
-    if other is not None:
-        with np.printoptions(threshold=np.inf, precision=2):
-            print(other.shape)
-            print(other[:, :, 4])
+    #if other is not None:
+    #    with np.printoptions(threshold=np.inf, precision=2):
+    #        print(other.shape)
+    #        print(other[:, :, 4])
     #print(f'Walkable: {get_available_actions(state_to_gym(state), state)}')

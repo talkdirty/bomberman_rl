@@ -1,11 +1,11 @@
 import gym
 import getch
 from stable_baselines3.common.env_checker import check_env
-from bombergym.scenarios import classic
+from bombergym.scenarios import classic, classic_with_opponents
 from bombergym.environments import register
 
 register()
-settings, agents = classic()
+settings, agents = classic_with_opponents()
 
 env = gym.make('BomberGym-v4', args=settings, agents=agents)
 check_env(env)
