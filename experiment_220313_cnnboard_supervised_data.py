@@ -1,7 +1,9 @@
+from datetime import datetime
 import os
 import argparse
 import pickle
 
+import lzma
 import ray
 import gym
 import logging
@@ -14,7 +16,7 @@ import bombergym.original.events as e
 register()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--output', help='Training data output pickle', required=True)
+parser.add_argument('--output', help='Training data output folder', required=True)
 parser.add_argument('--n', help='Total number of data generation jobs', type=int, default=10)
 parser.add_argument('--episodes', help='Total number of episodes to run per data generation job', type=int, default=10)
 
@@ -22,7 +24,7 @@ class Self:
     logger = logging.getLogger("Self")
 
 @ray.remote
-def work(output_name, n_episodes=100):
+def work(out_folder, id, n_episodes=100):
     register()
     settings, agents = classic_with_opponents()
     env = gym.make("BomberGym-v4", args=settings, agents=agents)
@@ -49,18 +51,18 @@ def work(output_name, n_episodes=100):
                     print(f'Skipping nonoptimal episode {i}')
                     break
                 print(f'Adding winning episode {i}')
-                global_buffer.append(episode_buffer)
+                time = datetime.utcnow().isoformat(timespec='milliseconds')
+                for frame_idx, frame in enumerate(episode_buffer):
+                    filename = f'{out_folder}/{time}-ray-{id}-episode-{i}-frame-{frame_idx}.pickle.xz'
+                    with lzma.open(filename, 'wb') as fd:
+                        pickle.dump(frame, fd)
                 break
-    with open(output_name, 'wb') as fd:
-        pickle.dump(global_buffer, fd)
-    return global_buffer
-    
 
 if __name__ == '__main__':
     args = parser.parse_args()
     jobs = []
     os.makedirs(args.output, exist_ok=True)
     for i in range(args.n):
-        jobs.append(work.remote(f"{args.output}/data{i}.pckl", n_episodes=args.episodes))
+        jobs.append(work.remote(args.output, i, n_episodes=args.episodes))
     ray.get(jobs)
 

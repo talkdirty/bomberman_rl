@@ -1,13 +1,17 @@
+import lzma
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.utils.data import random_split
+from torch.utils.data import random_split, ConcatDataset
 import torch.optim as optim
 from torch.optim import lr_scheduler
+from torch.utils.tensorboard import SummaryWriter
 
+import os
 import bombergym.settings as s
 import pickle
 import time
+import random
 from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
@@ -19,6 +23,7 @@ class CnnBoardNetwork(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=5, out_channels=32, kernel_size=3, stride=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(64, 64)
         self.fc2 = nn.Linear(64, output_size)
 
     def forward(self, x):
@@ -28,39 +33,35 @@ class CnnBoardNetwork(nn.Module):
         x = F.relu(x)
         x = self.conv3(x)
         x = F.relu(x)
-        x = self.fc2(x.view(x.size(0), -1))
-        return torch.sigmoid(x)
+        x = self.fc1(x.view(x.size(0), -1))
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
 
-class GameplayDataset:
-    def __init__(self, pckl_path):
-        self.things = []
-        with open(pckl_path, 'rb') as fd:
-            self.data = pickle.load(fd)
-        for episode in self.data:
-            for data in episode:
-                for step in data:
-                    old_state, action, rew, obs = step
-                    self.things.append((old_state, action))
+class GameplayDataset():
+    def __init__(self, directory):
+        self.directory = directory
+        self.files = os.listdir(directory)
 
     def __len__(self):
-        return len(self.things)
+        return len(self.files)
 
     def __getitem__(self, item):
-        state, action = self.things[item]
+        try:
+            with lzma.open(f'{self.directory}/{self.files[item]}') as fd:
+                state, action, _, _ = pickle.load(fd)
+        except EOFError:
+            print(f'Warn: {item}, {self.files[item]} is broken.')
+            return random.choice(self)
         action_oh = torch.zeros(len(s.ACTIONS), dtype=torch.float32)
         action_oh[action] = 1.
         state = torch.from_numpy(state.astype(np.float32))
         return state.swapaxes(0, 2), action_oh
 
-gs = GameplayDataset('test.pckl')
-print(len(gs))
-def get_dataloaders():
-    pass
-
 def train_model(model, dataloaders, use_cuda, optimizer, scheduler, num_epochs,
-                checkpoint_path_model, trained_epochs=0):
+                checkpoint_path_model, trained_epochs=0, writer=None):
     best_loss = 1e10
-    loss_fn = nn.BCELoss()
+    loss_fn = nn.CrossEntropyLoss()
 
     for epoch in range(trained_epochs, num_epochs):
         print(f'Epoch {epoch}/{num_epochs}')
@@ -75,9 +76,9 @@ def train_model(model, dataloaders, use_cuda, optimizer, scheduler, num_epochs,
             else:
                 model.eval()
 
-            epoch_samples = 0
+            running_loss = 0.0
 
-            for dic in tqdm(dataloaders[phase], total=len(dataloaders[phase])):
+            for idx, dic in enumerate(tqdm(dataloaders[phase], total=len(dataloaders[phase]))):
                 inputs, labels = dic
                 if use_cuda:
                     inputs = inputs.cuda()
@@ -98,23 +99,25 @@ def train_model(model, dataloaders, use_cuda, optimizer, scheduler, num_epochs,
                         optimizer.step()
 
                 # statistics
-                epoch_samples += inputs.size(0)
+                running_loss += loss.item()
 
-            #print_metrics(metrics, epoch_samples, phase)
-            #save_metrics(checkpoint_path_metrics, epoch, metrics, phase, epoch_samples)
-            epoch_loss = loss / epoch_samples
-
+            epoch_loss = running_loss / len(dataloaders[phase])
             if phase == 'train':
                 scheduler.step()
+                writer.add_scalar('Loss/train', epoch_loss, epoch * len(dataloaders[phase]))
                 for param_group in optimizer.param_groups:
-                    print("LR", param_group['lr'], "Loss", epoch_loss)
+                    print("LR", param_group['lr'], "Loss", epoch_loss, loss)
 
             # save the model weights
             if phase == 'val':
+                writer.add_scalar('Loss/val', epoch_loss, epoch * len(dataloaders[phase]))
                 if epoch_loss < best_loss:
                     print(f"saving best model to {checkpoint_path_model}")
                     best_loss = epoch_loss
                     torch.save(model.state_dict(), checkpoint_path_model)
+
+            running_loss = 0.0
+            writer.flush()
 
         time_elapsed = time.time() - since
         print('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
@@ -127,25 +130,26 @@ def train_model(model, dataloaders, use_cuda, optimizer, scheduler, num_epochs,
 
 if __name__ == '__main__':
     use_cuda = torch.cuda.is_available()
-    kwargs = {'num_workers': 3, 'pin_memory': True} if use_cuda else {}
+    kwargs = {'num_workers': 4, 'pin_memory': True} if use_cuda else {}
 
-    train_ds = GameplayDataset('test.pckl')
-    train_size = int(len(train_ds) * .8)
+    train_ds = GameplayDataset('data_frames_randomness/')
+    print(f'Loaded Data (len={len(train_ds)})')
+    train_size = int(len(train_ds) * .9)
     val_size = len(train_ds) - train_size
     train_ds, val_ds = random_split(train_ds, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=32, shuffle=True, **kwargs)
-    val_loader = torch.utils.data.DataLoader(val_ds,
-                                             batch_size=32,
-                                             shuffle=True, **kwargs)
+    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=32, shuffle=True, **kwargs)
     dataloaders = {
         "train": train_loader,
         "val": val_loader,
     }
     model = CnnBoardNetwork()
-    optimizer_ft = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                            lr=0.00025)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=8, gamma=.95)
+    if use_cuda:
+        model = model.cuda()
+    optimizer_ft = optim.Adam(model.parameters(), lr=0.000425)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=45, gamma=.1)
+    writer = SummaryWriter('testlog')
 
     model = train_model(model, dataloaders, use_cuda, optimizer_ft, exp_lr_scheduler,
-                        num_epochs=10, checkpoint_path_model='model.pth')
+            num_epochs=300, checkpoint_path_model='model.pth', writer=writer)

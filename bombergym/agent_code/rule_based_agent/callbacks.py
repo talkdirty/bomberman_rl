@@ -1,10 +1,13 @@
 from collections import deque
 from random import shuffle
+import random
 
 import numpy as np
 
 import bombergym.settings as s
 
+RANDOMNESS_CHANCE = .05
+COMPLETELY_RANDOM_CHANCE = .025
 
 def look_for_targets(free_space, start, targets, logger=None):
     """Find direction of closest target that can be reached via free tiles.
@@ -198,6 +201,17 @@ def act(self, game_state):
     for (xb, yb), t in bombs:
         if xb == x and yb == y:
             action_ideas.extend(action_ideas[:4])
+
+    if random.random() < COMPLETELY_RANDOM_CHANCE:
+        return random.choice(s.ACTIONS)
+    if random.random() < RANDOMNESS_CHANCE:
+        acts = [a for a in action_ideas if a in valid_actions]
+        if len(acts) == 0:
+            return
+        a = random.choice(acts)
+        if a == 'BOMB':
+            self.bomb_history.append((x, y))
+        return a
 
     # Pick last action added to the proposals list that is also valid
     while len(action_ideas) > 0:
