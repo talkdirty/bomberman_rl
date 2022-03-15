@@ -165,24 +165,29 @@ e.BOMB_DROPPED: -1,
 #### Initial Findings
 
 (Todo, put in report)
-Using the BomberGym-v2 experiment we successfully applied proximal policy
+Using the BomberGym-v2 (and v1, v3) experiments we successfully applied proximal policy
 optimization based reinforcement learning and are able to solve the coin-heaven
 subtask. However, we did not achieve convergence for the classic scenario, even
 in simplified form without any enemies.
 
+Orange Lane: v1 (only local vision) - Episode length is much longer. Blue Line (v2 pathfinding) -
+Lowest Episode length ==> best pathfinding characteristic of agent. Red line (v3 manhattan) -
+Slightly higher episode length but converges close to pathfinding version while being orders
+of magnitude faster to compute (see FPS graph)
+
 Figure x shows mean episode length against number of iterations.
 
-![](./assets/bombergym_v2_ep_rew_mean.svg)
+![](./assets/coinheaven_ppo_experiment_episode_length.svg)
 
 Figure y shows mean cumulative reward gained against number of iterations.
 
-![](./assets/bombergym_v2_ep_rew_mean.svg)
+![](./assets/coinheaven_ppo_experiment_reward.svg)
 
 Figure z shows mean iterations per second while training the reinforcement learning algorithm.
 The time measured includes the time required to update the game as well as the time required to
 optimize the policy.
 
-![](./assets/bombergym_v2_time_fps.svg)
+![](./assets/coinheaven_ppo_experiment_fps.svg)
 
 
 ### BomberGym-v4
