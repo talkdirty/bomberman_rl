@@ -56,7 +56,7 @@ class GameplayDataset():
         action_oh = torch.zeros(len(s.ACTIONS), dtype=torch.float32)
         action_oh[action] = 1.
         state = torch.from_numpy(state.astype(np.float32))
-        return state.swapaxes(0, 2), action_oh
+        return state, action_oh
 
 def train_model(model, dataloaders, use_cuda, optimizer, scheduler, num_epochs,
                 checkpoint_path_model, trained_epochs=0, writer=None):
@@ -132,7 +132,8 @@ if __name__ == '__main__':
     use_cuda = torch.cuda.is_available()
     kwargs = {'num_workers': 4, 'pin_memory': True} if use_cuda else {}
 
-    train_ds = GameplayDataset('data_frames_randomness/')
+    #train_ds = GameplayDataset('data_frames_randomness/')
+    train_ds = GameplayDataset('data_augmented/')
     print(f'Loaded Data (len={len(train_ds)})')
     train_size = int(len(train_ds) * .9)
     val_size = len(train_ds) - train_size
