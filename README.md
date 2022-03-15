@@ -201,3 +201,9 @@ Collect data with rule-based agent and injected randomness. Try to teach a CNN
 to play like rule_based agent in a supervised setting. Some promising results so far.
 Idea: can we use this as pretraining, and then fine tune our results with Deep-Q Atari
 Deepmind approach? Todo.
+
+Using a few tricks and basic supervised training, we can at least get something
+that kind of works (except for complete failure at the end, but we didn't train
+this one very long:)
+
+![](./assets/cnnboard_experiment_promising_results.gif)
