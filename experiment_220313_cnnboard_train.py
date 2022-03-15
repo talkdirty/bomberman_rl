@@ -139,8 +139,8 @@ if __name__ == '__main__':
     val_size = len(train_ds) - train_size
     train_ds, val_ds = random_split(train_ds, [train_size, val_size])
 
-    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=32, shuffle=True, **kwargs)
-    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=32, shuffle=True, **kwargs)
+    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=128, shuffle=True, **kwargs)
+    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=128, shuffle=True, **kwargs)
     dataloaders = {
         "train": train_loader,
         "val": val_loader,

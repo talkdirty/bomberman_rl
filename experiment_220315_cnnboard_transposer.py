@@ -10,13 +10,14 @@ import numpy as np
 np.set_printoptions(linewidth=120)
 
 from experiment_220313_cnnboard_train import CnnBoardNetwork
+model = CnnBoardNetwork()
+model.load_state_dict(torch.load("model.pth"))
+model.eval()
 
 register()
 settings, agents = classic_with_opponents()
 
 env = gym.make('BomberGym-v4', args=settings, agents=agents)
-
-obs = env.reset()
 
 def detect_initial_configuration(obs):
     agent_frame = obs[4, :, :]
@@ -24,9 +25,9 @@ def detect_initial_configuration(obs):
     x, y = x[0], y[0]
     config = None
     if x < 7 and y > 7:
-        config = 'top-right'
-    if x > 7 and y < 7:
         config = 'bottom-left'
+    if x > 7 and y < 7:
+        config = 'top-right'
     if x < 7 and y < 7:
         config = 'top-left'
     if x > 7 and y > 7:
@@ -35,18 +36,17 @@ def detect_initial_configuration(obs):
 
 def get_transposer(config):
     if config == 'top-left':
-        return lambda model, input: model(input)
+        return lambda model, input: model(torch.from_numpy(input).unsqueeze(0)).argmax().item()
     elif config == 'top-right':
-        # Flip Lr
         return transposer_lr
     elif config == 'bottom-left':
         return transposer_td
     else:
         return transposer_lrtd
 
-def transposer_lr(model, input):
-    input_aug = input[:, :, ::-1]
-    action = model(input_aug).argmax().item()
+def transposer_lr(model, inp):
+    input_aug = inp[:, ::-1, :].copy()
+    action = model(torch.from_numpy(input_aug).unsqueeze(0)).argmax().item()
     new_action_lr = None
     if action == 1: # Right
         new_action_lr = 3 # Left
@@ -56,9 +56,9 @@ def transposer_lr(model, input):
         new_action_lr = action
     return new_action_lr
 
-def transposer_td(model, input):
-    input_aug = old_obs[:, ::-1, :]
-    action = model(input_aug).argmax().item()
+def transposer_td(model, inp):
+    input_aug = inp[:, :, ::-1].copy()
+    action = model(torch.from_numpy(input_aug).unsqueeze(0)).argmax().item()
     new_action_ud = None
     if action == 0: # Up
         new_action_ud = 2 # down
@@ -68,9 +68,9 @@ def transposer_td(model, input):
         new_action_ud = action
     return new_action_ud
 
-def transposer_lrtd(model, input):
-    input_aug = old_obs[:, ::-1, ::-1]
-    action = model(input_aug).argmax().item()
+def transposer_lrtd(model, inp):
+    input_aug = inp[:, ::-1, ::-1].copy()
+    action = model(torch.from_numpy(input_aug).unsqueeze(0)).argmax().item()
     new_action_udlr = None
     if action == 0: # Up
         new_action_udlr = 2 # down
@@ -82,24 +82,16 @@ def transposer_lrtd(model, input):
         new_action_udlr = 1 # Right
     else:
         new_action_udlr = action
-    return action
+    return new_action_udlr
 
-def make_augmentations(old_obs, action, rew, obs):
-    flipped_obs_lr = old_obs[:, :, ::-1]
-    return [
-            (old_obs, action, rew, obs), 
-            (flipped_obs_lr, new_action_lr, rew, obs[:, :, ::-1] if obs is not None else None),
-            (flipped_obs_ud, new_action_ud, rew, obs[:, ::-1, :] if obs is not None else None),
-            (flipped_obs_udlr, new_action_udlr, rew, obs[:, ::-1, ::-1] if obs is not None else None),
-            ]
-
-
+obs = env.reset()
+initial_config = detect_initial_configuration(obs)
 transposer = get_transposer(initial_config)
-
+print(f'Config: {initial_config}')
+time.sleep(1)
 env.render()
 while True:
-    inp = torch.from_numpy(obs.swapaxes(0,2).astype(np.float32)).unsqueeze(0)
-    action = transposer(model, inp)
+    action = transposer(model, obs.astype(np.float32))
     obs, rew, done, other = env.step(action)
     if not done:
         feature_info = other["features"] if "features" in other else None

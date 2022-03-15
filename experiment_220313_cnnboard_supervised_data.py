@@ -30,18 +30,18 @@ class Self:
 def make_augmentations(old_obs, action, rew, obs):
     flipped_obs_lr = old_obs[:, :, ::-1]
     new_action_lr = None
-    if action == 1: # Right
-        new_action_lr = 3 # Left
-    elif action == 3: # Left
-        new_action_lr = 1 # Right
+    if action == 0: # Up
+        new_action_lr = 2 # down
+    elif action == 2: # Down
+        new_action_lr = 0 # Up
     else:
         new_action_lr = action
     flipped_obs_ud = old_obs[:, ::-1, :]
     new_action_ud = None
-    if action == 0: # Up
-        new_action_ud = 2 # down
-    elif action == 2: # Down
-        new_action_ud = 0 # Up
+    if action == 1: # Right
+        new_action_ud = 3 # Left
+    elif action == 3: # Left
+        new_action_ud = 1 # Right
     else:
         new_action_ud = action
     flipped_obs_udlr = old_obs[:, ::-1, ::-1]
