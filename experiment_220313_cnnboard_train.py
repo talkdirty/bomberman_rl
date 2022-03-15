@@ -22,8 +22,8 @@ class CnnBoardNetwork(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels=5, out_channels=32, kernel_size=3, stride=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(64, 64)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(128, 64)
         self.fc2 = nn.Linear(64, output_size)
 
     def forward(self, x):
@@ -147,8 +147,10 @@ if __name__ == '__main__':
     model = CnnBoardNetwork()
     if use_cuda:
         model = model.cuda()
-    optimizer_ft = optim.Adam(model.parameters(), lr=0.000425)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=45, gamma=.1)
+    optimizer_ft = optim.Adam(model.parameters(), lr=0.0025)
+    #optimizer_ft = optim.SGD(model.parameters(), lr=0.01)
+    #optimizer_ft = optim.RMSprop(model.parameters(), lr=0.00025, momentum=0.95)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=.1)
     writer = SummaryWriter('testlog')
 
     model = train_model(model, dataloaders, use_cuda, optimizer_ft, exp_lr_scheduler,

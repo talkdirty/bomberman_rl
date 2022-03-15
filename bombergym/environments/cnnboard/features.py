@@ -91,5 +91,4 @@ def state_to_gym(game_state: dict) -> dict:
     money_field = gym_field_coins(game_state['field'].T, game_state['coins'])
     agent_field = gym_field_agents(game_state['field'].T, game_state['self'],game_state['others'])
     full = np.dstack((crate_field, danger_field, wall_field, money_field, agent_field))
-    #import ipdb; ipdb.set_trace()
-    return full
+    return full.swapaxes(0,2)
