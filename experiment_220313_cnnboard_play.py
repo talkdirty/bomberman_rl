@@ -16,6 +16,7 @@ env = gym.make('BomberGym-v4', args=settings, agents=agents)
 
 model = CnnBoardNetwork()
 model.load_state_dict(torch.load("model.pth"))
+model.eval()
 
 obs = env.reset()
 env.render()
