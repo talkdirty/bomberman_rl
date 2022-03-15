@@ -2,6 +2,7 @@ import gym
 
 import bombergym.environments.manhattan_v2.features
 import bombergym.environments.manhattan_v2.rewards
+import bombergym.environments.murder.rewards_murder
 
 REGISTERED = False
 
@@ -47,3 +48,10 @@ def register():
         entry_point=f'{__package__}.cnnboard.cnnboard:BomberGymCnnBoard',
         max_episode_steps=401,
     )
+
+    gym.envs.register(
+        id='BomberGym-v5',
+        entry_point=f'{__package__}.murder.reduced_murder:BomberGymReduced',
+        max_episode_steps=401,
+    )
+
