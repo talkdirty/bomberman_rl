@@ -129,6 +129,75 @@ e.WAITED: -.3,
 
 ### BomberGym-v2
 
-Work in Progress!
-Idea: try to incorporate some global awareness features.
-CONCRETE IDEA: Taxicab norm to nearest {thing}, if going left, right, top, bottom!
+`Codename: Manhattan`
+
+We like how BomberGym-v1 performs and is able to solve the coin-heaven without
+big problems. However, it's just too damn slow - python-pathfinding is the
+main reason, and also our implementation is far from optimal. Can we do better?
+Turns out - replacing the complicated pathfinding algorithm with the manhattan
+distance, and keeping everything else the same converges to the same reward -
+and we can process 300 frames per second again instead of 3 frames per second in
+the pathfinding variant. Quite unexpected!
+
+### BomberGym-v3
+
+`Codename: Manhattan V2`
+
+In BomberGym-v2 we didn't play with rewards. In particular, in the rewards until
+now a suicide penalty is missing. We address this in this environment.
+Everything else is the same to `BomberGym-v2` (I think, gotta check it again)
+
+```
+e.COIN_COLLECTED: 5,
+e.INVALID_ACTION: -1,
+e.KILLED_OPPONENT: 10,
+e.SURVIVED_ROUND: 10,
+e.KILLED_SELF: -10,
+e.MOVED_DOWN: -.5,
+e.MOVED_LEFT: -.5,
+e.MOVED_RIGHT: -.5,
+e.MOVED_UP: -.5,
+e.WAITED: -.8,
+e.CRATE_DESTROYED: 3,
+e.BOMB_DROPPED: -1,
+```
+
+#### Initial Findings
+
+(Todo, put in report)
+Using the BomberGym-v2 (and v1, v3) experiments we successfully applied proximal policy
+optimization based reinforcement learning and are able to solve the coin-heaven
+subtask. However, we did not achieve convergence for the classic scenario, even
+in simplified form without any enemies.
+
+Orange Lane: v1 (only local vision) - Episode length is much longer. Blue Line (v2 pathfinding) -
+Lowest Episode length ==> best pathfinding characteristic of agent. Red line (v3 manhattan) -
+Slightly higher episode length but converges close to pathfinding version while being orders
+of magnitude faster to compute (see FPS graph)
+
+Figure x shows mean episode length against number of iterations.
+
+![](./assets/coinheaven_ppo_experiment_episode_length.svg)
+
+Figure y shows mean cumulative reward gained against number of iterations.
+
+![](./assets/coinheaven_ppo_experiment_reward.svg)
+
+Figure z shows mean iterations per second while training the reinforcement learning algorithm.
+The time measured includes the time required to update the game as well as the time required to
+optimize the policy.
+
+![](./assets/coinheaven_ppo_experiment_fps.svg)
+
+
+### BomberGym-v4
+
+`Codename: Cnnboard`
+
+Trying out a kind of stupid idea. Work in progress. Back to the roots - similar
+to plain boards, but different channels conveying different information, like
+r,g,b channels in image, grid,danger,enemy,coin,crate channel - put into CNN.
+Collect data with rule-based agent and injected randomness. Try to teach a CNN
+to play like rule_based agent in a supervised setting. Some promising results so far.
+Idea: can we use this as pretraining, and then fine tune our results with Deep-Q Atari
+Deepmind approach? Todo.

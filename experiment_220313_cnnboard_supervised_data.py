@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import argparse
+import numpy as np
 import pickle
 
 import lzma
@@ -12,6 +13,9 @@ from bombergym.environments import register
 from bombergym.agent_code.rule_based_agent.callbacks import act, setup
 from bombergym.settings import ACTIONS
 import bombergym.original.events as e
+import time
+
+np.set_printoptions(linewidth=250)
 
 register()
 
@@ -22,6 +26,42 @@ parser.add_argument('--episodes', help='Total number of episodes to run per data
 
 class Self:
     logger = logging.getLogger("Self")
+
+def make_augmentations(old_obs, action, rew, obs):
+    flipped_obs_lr = old_obs[:, :, ::-1]
+    new_action_lr = None
+    if action == 1: # Right
+        new_action_lr = 3 # Left
+    elif action == 3: # Left
+        new_action_lr = 1 # Right
+    else:
+        new_action_lr = action
+    flipped_obs_ud = old_obs[:, ::-1, :]
+    new_action_ud = None
+    if action == 0: # Up
+        new_action_ud = 2 # down
+    elif action == 2: # Down
+        new_action_ud = 0 # Up
+    else:
+        new_action_ud = action
+    flipped_obs_udlr = old_obs[:, ::-1, ::-1]
+    new_action_udlr = None
+    if action == 0: # Up
+        new_action_udlr = 2 # down
+    elif action == 2: # Down
+        new_action_udlr = 0 # Up
+    elif action == 1: # Right
+        new_action_udlr = 3 # Left
+    elif action == 3: # Left
+        new_action_udlr = 1 # Right
+    else:
+        new_action_udlr = action
+    return [
+            (old_obs, action, rew, obs), 
+            (flipped_obs_lr, new_action_lr, rew, obs[:, :, ::-1] if obs is not None else None),
+            (flipped_obs_ud, new_action_ud, rew, obs[:, ::-1, :] if obs is not None else None),
+            (flipped_obs_udlr, new_action_udlr, rew, obs[:, ::-1, ::-1] if obs is not None else None),
+            ]
 
 @ray.remote
 def work(out_folder, id, n_episodes=100):
@@ -44,7 +84,8 @@ def work(out_folder, id, n_episodes=100):
             action = ACTIONS.index(action)
             old_obs = obs
             obs, rew, done, other = env.step(action)
-            episode_buffer.append((old_obs, action, rew, obs))
+            new_data = make_augmentations(old_obs, action, rew, obs)
+            episode_buffer += new_data
             orig_state = other["orig_state"]
             if done:
                 if env.env.did_i_die():
