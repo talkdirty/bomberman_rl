@@ -162,6 +162,29 @@ e.CRATE_DESTROYED: 3,
 e.BOMB_DROPPED: -1,
 ```
 
+#### Initial Findings
+
+(Todo, put in report)
+Using the BomberGym-v2 experiment we successfully applied proximal policy
+optimization based reinforcement learning and are able to solve the coin-heaven
+subtask. However, we did not achieve convergence for the classic scenario, even
+in simplified form without any enemies.
+
+Figure x shows mean episode length against number of iterations.
+
+![](./assets/bombergym_v2_ep_rew_mean.svg)
+
+Figure y shows mean cumulative reward gained against number of iterations.
+
+![](./assets/bombergym_v2_ep_rew_mean.svg)
+
+Figure z shows mean iterations per second while training the reinforcement learning algorithm.
+The time measured includes the time required to update the game as well as the time required to
+optimize the policy.
+
+![](./assets/bombergym_v2_time_fps.svg)
+
+
 ### BomberGym-v4
 
 `Codename: Cnnboard`
