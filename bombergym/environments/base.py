@@ -333,7 +333,8 @@ class BombeRLeWorld(gym.Env):
                     arena[x, y] = WALL
 
         # Clean the start positions
-        start_positions = [(1, 1), (1, s.ROWS - 2), (s.COLS - 2, 1), (s.COLS - 2, s.ROWS - 2)]
+
+        start_positions = [(1,1), (s.COLS-2,1), (1, s.ROWS-2), (s.COLS - 2, s.ROWS - 2)]
         for (x, y) in start_positions:
             for (xx, yy) in [(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]:
                 if arena[xx, yy] == 1:
@@ -352,10 +353,18 @@ class BombeRLeWorld(gym.Env):
             coins.append(Coin((x, y), collectable=arena[x, y] == FREE))
 
         # Reset agents and distribute starting positions
-        active_agents = []
-        for agent, start_position in zip(self.agents, self.rng.permutation(start_positions)):
-            active_agents.append(agent)
-            agent.x, agent.y = start_position
+        if False:
+            my_agent_pos = (1,1)
+            active_agents = [self.agents[0]]
+            self.agents[0].x, self.agents[0].y = my_agent_pos
+            for agent, start_position in zip(self.agents[1:], self.rng.permutation(start_positions[1:])):
+                active_agents.append(agent)
+                agent.x, agent.y = start_position
+        else:
+            active_agents = []
+            for agent, start_position in zip(self.agents, self.rng.permutation(start_positions)):
+                active_agents.append(agent)
+                agent.x, agent.y = start_position
 
         return arena, coins, active_agents
 

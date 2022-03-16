@@ -8,7 +8,7 @@ register()
 settings, agents = classic_with_opponents()
 
 env = gym.make('BomberGym-v4', args=settings, agents=agents)
-check_env(env)
+#check_env(env)
 
 # env = make_vec_env("BomberGym-v0", n_envs=4)
 env.reset()

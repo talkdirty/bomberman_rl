@@ -1,7 +1,7 @@
 import gym
 import getch
 from stable_baselines3.common.env_checker import check_env
-from bombergym.scenarios import classic, classic_with_opponents
+from bombergym.scenarios import classic, classic_with_opponents, coin_heaven
 from bombergym.environments import register
 import torch
 import time
@@ -15,7 +15,8 @@ model.load_state_dict(torch.load("model.pth"))
 model.eval()
 
 register()
-settings, agents = classic_with_opponents()
+#settings, agents = classic_with_opponents()
+settings, agents = coin_heaven()
 
 env = gym.make('BomberGym-v4', args=settings, agents=agents)
 
