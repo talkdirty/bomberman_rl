@@ -49,7 +49,6 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
         self.perform_agent_action(self.agents[0], action_orig)
         # Hook into original logic and dispatch world update
         events = self.do_step()
-        print('events', events)
         orig_state = self.get_state_for_agent(self.agents[0])
         # Provide facility for computing extra events with altered control
         # flow, similar to train:game_events_occured in callback version

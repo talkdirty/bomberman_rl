@@ -264,7 +264,6 @@ class BombeRLeWorld(gym.Env):
                         if a is explosion.owner:
                             self.logger.info(f'Agent <{a.name}> blown up by own bomb')
                             a.add_event(e.KILLED_SELF)
-                            print('adding killed self event')
                             #explosion.owner.trophies.append(Trophy.suicide_trophy)
                         else:
                             self.logger.info(f'Agent <{a.name}> blown up by agent <{explosion.owner.name}>\'s bomb')
