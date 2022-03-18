@@ -180,7 +180,11 @@ class BombeRLeWorld(gym.Env):
         self.update_explosions()
         self.update_bombs()
         self.evaluate_explosions()
-        events = self.active_agents[0].events if len(self.active_agents) else self.agents[0].events
+        events = []
+        for a in self.agents:
+            if a.code_name == 'gym_surrogate_agent':
+                events = a.events
+        #events = self.active_agents[0].events if len(self.active_agents) else self.agents[0].events
         self.send_game_events()
 
         if self.time_to_stop():
@@ -260,6 +264,7 @@ class BombeRLeWorld(gym.Env):
                         if a is explosion.owner:
                             self.logger.info(f'Agent <{a.name}> blown up by own bomb')
                             a.add_event(e.KILLED_SELF)
+                            print('adding killed self event')
                             #explosion.owner.trophies.append(Trophy.suicide_trophy)
                         else:
                             self.logger.info(f'Agent <{a.name}> blown up by agent <{explosion.owner.name}>\'s bomb')
