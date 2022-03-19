@@ -201,3 +201,8 @@ Collect data with rule-based agent and injected randomness. Try to teach a CNN
 to play like rule_based agent in a supervised setting. Some promising results so far.
 Idea: can we use this as pretraining, and then fine tune our results with Deep-Q Atari
 Deepmind approach? Todo.
+
+### BomberGym-v5
+`Codename: murder`
+Try to teach agent to drop bombs, flee from them, destroy crates and kill oponents. Modification of v1, only by rewards. Working on: defining more rewards moved towards closest agent, is next ot other agent, dropped bomb next to other agent...Right now only flees from bomb. moved towards closest agent did not work so far, neither with the pathfinding alg nor with eucledian distance, needs different approach.
+
