@@ -31,7 +31,7 @@ class BomberGymReduced(BombeRLeWorld, gym.Env):
         return state_to_gym(orig_state)
 
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
-        return [moved_towards_agent(old_state, new_state), dropped_bomb_next_to_other(new_state)]
+        return []#moved_towards_agent(old_state, new_state), dropped_bomb_next_to_other(new_state)
 
     def step(self, action):
         action_orig = s.ACTIONS[action]

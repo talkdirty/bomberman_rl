@@ -1,3 +1,5 @@
+*.zip
+*.pcl
 # Byte-compiled / optimized / DLL files
 logs/
 __pycache__/

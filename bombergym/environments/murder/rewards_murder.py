@@ -151,7 +151,7 @@ def reward_from_events(events) -> int:
     game_rewards = {
         
         e.INVALID_ACTION: -1,
-        e.CRATE_DESTROYED: 2,
+        e.CRATE_DESTROYED: 3,
         e.BOMB_DROPPED: 1,
         e.KILLED_SELF: -30,
         e.KILLED_OPPONENT: 10,
@@ -161,11 +161,11 @@ def reward_from_events(events) -> int:
         e.MOVED_RIGHT: -.1,
         e.MOVED_UP: -.1,
         e.WAITED: -.3,
-        BOMB_FLED: 3,
-        IS_NEXT_TO_OTHER_AGENT: 2,
+        BOMB_FLED: 5,
+        #IS_NEXT_TO_OTHER_AGENT: 2,
         WALKS_INTO_BOMB_RADIUS: -3,
-        AGENT_MOVED_OUT_OF_BOMB_TILE: 2,
-        MOVED_TOWARDS_CLOSEST_AGENT: 3,
+        AGENT_MOVED_OUT_OF_BOMB_TILE: 3,
+        #MOVED_TOWARDS_CLOSEST_AGENT: 3,
         DROPPED_BOMB_NEXT_TO_OTHER_AGENT: 5
     }
     if is_subset(events, [e.BOMB_DROPPED, WALKS_INTO_BOMB_RADIUS]):
