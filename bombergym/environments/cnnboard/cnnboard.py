@@ -33,6 +33,18 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
         return []
 
+    def did_i_win(self):
+        enemy_scores = []
+        for agent in self.agents:
+            if agent.code_name == "gym_surrogate_agent":
+                my_score = agent.score
+            else:
+                enemy_scores.append(agent.score)
+        if my_score > max(enemy_scores):
+            return True
+        else:
+            return False
+
     def did_i_die(self):
         died = True
         for agent in self.active_agents:
