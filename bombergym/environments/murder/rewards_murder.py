@@ -3,7 +3,7 @@ import numpy as np
 import bombergym.original.events as e
 import bombergym.settings as s
 
-from bombergym.environments.plain.navigation import bomb_pathfinding_grid
+from bombergym.environments.plain.navigation import bomb_pathfinding_grid, pathfinder
 
 
 BOMB_FLED = "BOMB_FLED"
