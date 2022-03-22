@@ -34,7 +34,7 @@ def work(n_episodes=100):
     for i in range(n_episodes):
         episode_buffer = []
         obs = env.reset()
-        env.render()
+        # env.render()
         orig_state = env.env.initial_state
         while True:
             action = act(self, orig_state)
@@ -42,8 +42,8 @@ def work(n_episodes=100):
                 action = "WAIT"
             action = ACTIONS.index(action)
             obs, rew, done, other = env.step(action)
-            env.render()
-            time.sleep(.5)
+            # env.render()
+            # time.sleep(.5)
             orig_state = other["orig_state"]
             if done:
                 if env.env.did_i_win():
@@ -60,8 +60,8 @@ if __name__ == '__main__':
         #jobs.append(work.remote(args.output, i, n_episodes=args.episodes))
     #jobs.append(work(args.output, 0, n_episodes=args.episodes))
     jobs = []
-    for i in range(1):
-        jobs.append(work.remote(n_episodes=10))
+    for i in range(12):
+        jobs.append(work.remote(n_episodes=100))
     data = ray.get(jobs)
     total_won, total_lost = 0, 0
     for won, lost in data:

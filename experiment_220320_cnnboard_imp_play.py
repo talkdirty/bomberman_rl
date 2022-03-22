@@ -14,7 +14,7 @@ model = resnet18(
     norm_layer=lambda channels: torch.nn.GroupNorm(num_groups=32, num_channels=channels, eps=1e-5, affine=True),
     num_classes=6
 )
-model.load_state_dict(torch.load("model.pth"))
+model.load_state_dict(torch.load("model2.pth"))
 model.eval()
 
 register()

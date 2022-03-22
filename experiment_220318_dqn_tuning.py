@@ -12,11 +12,9 @@ GAMES = 100
 
 np.set_printoptions(linewidth=120)
 
-from testresnet import resnet18
-model = resnet18(
-    norm_layer=lambda channels: torch.nn.GroupNorm(num_groups=32, num_channels=channels, eps=1e-5, affine=True),
-    num_classes=6
-)
+from experiment_220322_resnet_model import CnnboardResNet
+
+model = CnnboardResNet()
 model.load_state_dict(torch.load("dqn_test2.pth"))
 model.eval()
 

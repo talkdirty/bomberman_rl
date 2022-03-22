@@ -164,7 +164,7 @@ class BombeRLeWorld(gym.Env):
         else:
             agent.add_event(e.INVALID_ACTION)
 
-    def do_step(self, user_input='WAIT'):
+    def do_step(self, action, user_input='WAIT'):
         assert self.running
 
         self.step_counter += 1
@@ -173,7 +173,7 @@ class BombeRLeWorld(gym.Env):
         self.user_input = user_input
         self.logger.debug(f'User input: {self.user_input}')
 
-        self.poll_and_run_agents()
+        self.poll_and_run_agents(action)
 
         # Progress world elements based
         self.collect_coins()
@@ -396,18 +396,26 @@ class BombeRLeWorld(gym.Env):
 
         return state
 
-    def poll_and_run_agents(self):
+    def poll_and_run_agents(self, action):
         # Tell agents to act
         # Do not run our own agent
-        for i in range(1, len(self.active_agents)):
+        for i in range(len(self.active_agents)):
             a = self.active_agents[i]
-            if a.available_think_time > 0:
-                a.act(self.get_state_for_agent(a))
+            state = self.get_state_for_agent(a)
+            a.store_game_state(state)
+            a.reset_game_events()
+            a.act(state)
 
-        for i in range(1, len(self.active_agents)):
+        perm = self.rng.permutation(len(self.active_agents))
+        for i in perm:
             a = self.active_agents[i]
-            action, _ = a.wait_for_act()
-            self.perform_agent_action(a, action)
+            if a.code_name == 'gym_surrogate_agent':
+                # Our agent, inject custom action
+                _, _ = a.wait_for_act()
+                self.perform_agent_action(a, action)
+            else:
+                computer_action, _ = a.wait_for_act()
+                self.perform_agent_action(a, computer_action)
 
     def send_game_events(self):
         # Send events to all agents that expect them, then reset and wait for them
