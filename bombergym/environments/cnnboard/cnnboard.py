@@ -41,7 +41,7 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
                 my_score = agent.score
             else:
                 enemy_scores.append(agent.score)
-        print(f'my score: {my_score}, enemy scores: {enemy_scores}')
+        # print(f'my score: {my_score}, enemy scores: {enemy_scores}')
         if my_score > max(enemy_scores):
             return True
         else:
