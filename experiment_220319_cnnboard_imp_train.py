@@ -18,28 +18,6 @@ import numpy as np
 
 from testresnet import resnet18
 
-class CnnBoardNetwork(nn.Module):
-    def __init__(self, output_size=len(s.ACTIONS)):
-        super(CnnBoardNetwork, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels=5, out_channels=32, kernel_size=3, stride=2)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(128, 64)
-        self.fc2 = nn.Linear(64, output_size)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = self.conv3(x)
-        x = F.relu(x)
-        x = self.fc1(x.view(x.size(0), -1))
-        x = F.relu(x)
-        x = self.fc2(x)
-        return x
-
 class GameplayDataset():
     def __init__(self, directory):
         self.directory = directory
@@ -51,7 +29,7 @@ class GameplayDataset():
     def __getitem__(self, item):
         try:
             with lzma.open(f'{self.directory}/{self.files[item]}') as fd:
-                state, action, _, _ = pickle.load(fd)
+                state, action, _ = pickle.load(fd)
         except EOFError:
             print(f'Warn: {item}, {self.files[item]} is broken.')
             return random.choice(self)
@@ -142,7 +120,7 @@ if __name__ == '__main__':
     kwargs = {'num_workers': 4, 'pin_memory': True} if use_cuda else {}
 
     #train_ds = GameplayDataset('data_frames_randomness/')
-    train_ds = GameplayDataset('data_augmented_topleft/')
+    train_ds = GameplayDataset('data_augmented_doublespace/')
     print(f'Loaded Data (len={len(train_ds)})')
     train_size = int(len(train_ds) * .9)
     val_size = len(train_ds) - train_size
@@ -164,7 +142,7 @@ if __name__ == '__main__':
     optimizer_ft = optim.Adam(model.parameters(), lr=0.0025)
     #optimizer_ft = optim.SGD(model.parameters(), lr=0.01)
     #optimizer_ft = optim.RMSprop(model.parameters(), lr=0.00025, momentum=0.95)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=.1)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=20, gamma=.5)
     writer = SummaryWriter('testlog')
 
     criterion = nn.CrossEntropyLoss()

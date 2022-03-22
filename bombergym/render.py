@@ -16,8 +16,8 @@ collision = '💥'
 space = '➖'
 
 def render(state, events=None, rewards=None, clear=True, other=None):
-    if clear:
-        print("\033c", end="")
+    #if clear:
+    #    print("\033c", end="")
     field = np.zeros((s.ROWS, s.COLS), dtype=str)
     field[:, :] = space
 
