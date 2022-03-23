@@ -10,9 +10,9 @@ def reward_from_events(events) -> int:
     game_rewards = {
         e.COIN_COLLECTED: 5,
         e.INVALID_ACTION: -1,
-        e.KILLED_OPPONENT: 10,
+        e.KILLED_OPPONENT: 40,
         e.SURVIVED_ROUND: 10,
-        e.KILLED_SELF: -10,
+        e.KILLED_SELF: -30,
         e.MOVED_DOWN: -.5,
         e.MOVED_LEFT: -.5,
         e.MOVED_RIGHT: -.5,

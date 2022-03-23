@@ -6,8 +6,11 @@ import numpy as np
 
 import bombergym.settings as s
 
-RANDOMNESS_CHANCE = .05
-COMPLETELY_RANDOM_CHANCE = .025
+#RANDOMNESS_CHANCE = .05
+#COMPLETELY_RANDOM_CHANCE = .025
+RANDOMNESS_CHANCE = .0
+COMPLETELY_RANDOM_CHANCE = .0
+
 
 def look_for_targets(free_space, start, targets, logger=None):
     """Find direction of closest target that can be reached via free tiles.

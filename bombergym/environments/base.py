@@ -164,7 +164,7 @@ class BombeRLeWorld(gym.Env):
         else:
             agent.add_event(e.INVALID_ACTION)
 
-    def do_step(self, user_input='WAIT'):
+    def do_step(self, action, user_input='WAIT'):
         assert self.running
 
         self.step_counter += 1
@@ -173,14 +173,18 @@ class BombeRLeWorld(gym.Env):
         self.user_input = user_input
         self.logger.debug(f'User input: {self.user_input}')
 
-        self.poll_and_run_agents()
+        self.poll_and_run_agents(action)
 
         # Progress world elements based
         self.collect_coins()
         self.update_explosions()
         self.update_bombs()
         self.evaluate_explosions()
-        events = self.active_agents[0].events if len(self.active_agents) else self.agents[0].events
+        events = []
+        for a in self.agents:
+            if a.code_name == 'gym_surrogate_agent':
+                events = a.events
+        #events = self.active_agents[0].events if len(self.active_agents) else self.agents[0].events
         self.send_game_events()
 
         if self.time_to_stop():
@@ -333,7 +337,8 @@ class BombeRLeWorld(gym.Env):
                     arena[x, y] = WALL
 
         # Clean the start positions
-        start_positions = [(1, 1), (1, s.ROWS - 2), (s.COLS - 2, 1), (s.COLS - 2, s.ROWS - 2)]
+
+        start_positions = [(1,1), (s.COLS-2,1), (1, s.ROWS-2), (s.COLS - 2, s.ROWS - 2)]
         for (x, y) in start_positions:
             for (xx, yy) in [(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]:
                 if arena[xx, yy] == 1:
@@ -352,10 +357,18 @@ class BombeRLeWorld(gym.Env):
             coins.append(Coin((x, y), collectable=arena[x, y] == FREE))
 
         # Reset agents and distribute starting positions
-        active_agents = []
-        for agent, start_position in zip(self.agents, self.rng.permutation(start_positions)):
-            active_agents.append(agent)
-            agent.x, agent.y = start_position
+        if False:
+            my_agent_pos = (1,1)
+            active_agents = [self.agents[0]]
+            self.agents[0].x, self.agents[0].y = my_agent_pos
+            for agent, start_position in zip(self.agents[1:], self.rng.permutation(start_positions[1:])):
+                active_agents.append(agent)
+                agent.x, agent.y = start_position
+        else:
+            active_agents = []
+            for agent, start_position in zip(self.agents, self.rng.permutation(start_positions)):
+                active_agents.append(agent)
+                agent.x, agent.y = start_position
 
         return arena, coins, active_agents
 
@@ -383,18 +396,26 @@ class BombeRLeWorld(gym.Env):
 
         return state
 
-    def poll_and_run_agents(self):
+    def poll_and_run_agents(self, action):
         # Tell agents to act
         # Do not run our own agent
-        for i in range(1, len(self.active_agents)):
+        for i in range(len(self.active_agents)):
             a = self.active_agents[i]
-            if a.available_think_time > 0:
-                a.act(self.get_state_for_agent(a))
+            state = self.get_state_for_agent(a)
+            a.store_game_state(state)
+            a.reset_game_events()
+            a.act(state)
 
-        for i in range(1, len(self.active_agents)):
+        perm = self.rng.permutation(len(self.active_agents))
+        for i in perm:
             a = self.active_agents[i]
-            action, _ = a.wait_for_act()
-            self.perform_agent_action(a, action)
+            if a.code_name == 'gym_surrogate_agent':
+                # Our agent, inject custom action
+                _, _ = a.wait_for_act()
+                self.perform_agent_action(a, action)
+            else:
+                computer_action, _ = a.wait_for_act()
+                self.perform_agent_action(a, computer_action)
 
     def send_game_events(self):
         # Send events to all agents that expect them, then reset and wait for them

@@ -21,7 +21,7 @@ model.eval()
 obs = env.reset()
 env.render()
 while True:
-    inp = torch.from_numpy(obs.swapaxes(0,2).astype(np.float32)).unsqueeze(0)
+    inp = torch.from_numpy(obs.astype(np.float32)).unsqueeze(0)
     print(inp.shape)
     action = model(inp)
     obs, rew, done, other = env.step(action.argmax().item())

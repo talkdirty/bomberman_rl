@@ -19,7 +19,7 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
     def __init__(self, args, agents, state_fn=state_to_gym, reward_fn=reward_from_events):
       super().__init__(args, agents)
       self.action_space = spaces.Discrete(len(s.ACTIONS))
-      self.observation_space = spaces.Box(low=-1, high=1, shape=(s.COLS, s.ROWS, 5))
+      self.observation_space = spaces.Box(low=-1, high=1, shape=(5, s.COLS, s.ROWS))
       self.state_fn = state_fn
       self.reward_fn = reward_fn
 
@@ -32,6 +32,20 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
 
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
         return []
+
+    def did_i_win(self):
+        enemy_scores = []
+        my_score = 0
+        for agent in self.agents:
+            if agent.code_name == "gym_surrogate_agent":
+                my_score = agent.score
+            else:
+                enemy_scores.append(agent.score)
+        # print(f'my score: {my_score}, enemy scores: {enemy_scores}')
+        if my_score > max(enemy_scores):
+            return True
+        else:
+            return False
 
     def did_i_die(self):
         died = True
@@ -46,9 +60,9 @@ class BomberGymCnnBoard(BombeRLeWorld, gym.Env):
         # Treat our own agent specially and dispatch its action
         # WARNING alters game logic a bit, as we are usually not
         # executed first (TODO relevant?)
-        self.perform_agent_action(self.agents[0], action_orig)
+        # self.perform_agent_action(self.agents[0], action_orig)
         # Hook into original logic and dispatch world update
-        events = self.do_step()
+        events = self.do_step(action_orig)
         orig_state = self.get_state_for_agent(self.agents[0])
         # Provide facility for computing extra events with altered control
         # flow, similar to train:game_events_occured in callback version
