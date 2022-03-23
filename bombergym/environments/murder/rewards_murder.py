@@ -3,7 +3,7 @@ import numpy as np
 import bombergym.original.events as e
 import bombergym.settings as s
 
-from bombergym.environments.plain.navigation import bomb_pathfinding_grid
+from bombergym.environments.plain.navigation import bomb_pathfinding_grid, pathfinder, bomb_pathfinding_grid_neighbor
 
 
 BOMB_FLED = "BOMB_FLED"
@@ -15,6 +15,7 @@ MOVED_TOWARDS_OTHER_AGENT = "MOVED_TOWARDS_OTHER_AGENT"
 MOVED_TOWARDS_CLOSEST_AGENT = "MOVED_TOWARDS_CLOSEST_AGENT"
 IS_NEXT_TO_OTHER_AGENT = "IS_NEXT_TO_OTHER_AGENT"
 DROPPED_BOMB_NEXT_TO_OTHER_AGENT = "DROPPED_BOMB_NEXT_TO_OTHER_AGENT"
+UNNECESSARY_BOMB = "UNNECESSARY_BOMB"
 
 
 def is_subset(set, subset):
@@ -100,19 +101,25 @@ def next_to_other_agent(state):
 def moved_towards_agent(old_state, state):
     if state is None or state['field'] is None:
         return
-    g = bomb_pathfinding_grid(state)
-    g_agent = g.node(state['self'][3][1], state['self'][3][0])
-    agent_dist_new = np.zeros(len(old_state['others']))###error:nonetype object is not subscriptable...
+    if old_state is None or old_state['field'] is None:
+        return
+    g = bomb_pathfinding_grid_neighbor(state)
+    g_old = bomb_pathfinding_grid_neighbor(old_state)
+    g_agent_new = g.node(state['self'][3][1], state['self'][3][0])
+    g_agent_old = g.node(old_state['self'][3][1], old_state['self'][3][0])
+
+    agent_dist_new = np.zeros(len(state['others']))
     agent_dist_old = np.zeros(len(old_state['others']))
     for id,agent  in enumerate(old_state['others']):
-        g_other_old = g.node(agent[3][1], agent[3][0])
-        g_other_new = g.node(state['others'][id][3][1], state['others'][id][3][0])
-        path_old, _ = pathfinder.find_path(g_agent, g_other_old, g)
-        path_new, _ = pathfinder.find_path(g_agent, g_other_new, g)
-        agent_dist_new[id] = path_new
-        agent_dist_old[id] = path_new
+        if state['others'][id]:
+            g_other_old = g.node(agent[3][1], agent[3][0])
+            g_other_new = g.node(state['others'][id][3][1], state['others'][id][3][0])
+            path_old, _ = pathfinder.find_path(g_agent_old, g_other_old, g_old)
+            path_new, _ = pathfinder.find_path(g_agent_new, g_other_new, g)
+            agent_dist_new[id] = len(path_new)
+            agent_dist_old[id] = len(path_old)
     
-    if len(agent_dist_old[np.argmin(agent_dist_new)]) > len(np.min(agent_dist_new)):
+    if np.min(agent_dist_new) < np.min(agent_dist_old) and np.min(agent_dist_new) < 7:
         return MOVED_TOWARDS_CLOSEST_AGENT
 
 
@@ -139,6 +146,14 @@ def dropped_bomb_next_to_other(state):
             if e.BOMB_DROPPED:
                 return DROPPED_BOMB_NEXT_TO_OTHER_AGENT
 
+
+def unnecessary_bomb(state):
+    if state is None or state['field'] is None:
+        return
+    if e.BOMB_EXPLODED and not e.KILLED_OPPONENT and not e.CRATE_DESTROYED:
+        return UNNECESSARY_BOMB
+
+
             
 
 def reward_from_events(events) -> int:
@@ -151,7 +166,7 @@ def reward_from_events(events) -> int:
     game_rewards = {
         
         e.INVALID_ACTION: -1,
-        e.CRATE_DESTROYED: 3,
+        e.CRATE_DESTROYED: 2,
         e.BOMB_DROPPED: 1,
         e.KILLED_SELF: -30,
         e.KILLED_OPPONENT: 10,
@@ -165,8 +180,10 @@ def reward_from_events(events) -> int:
         #IS_NEXT_TO_OTHER_AGENT: 2,
         WALKS_INTO_BOMB_RADIUS: -3,
         AGENT_MOVED_OUT_OF_BOMB_TILE: 3,
-        #MOVED_TOWARDS_CLOSEST_AGENT: 3,
-        DROPPED_BOMB_NEXT_TO_OTHER_AGENT: 5
+        MOVED_TOWARDS_CLOSEST_AGENT: 3,
+        UNNECESSARY_BOMB: -11,#somehow in this setting too many invalid operations...
+        #DROPPED_BOMB_NEXT_TO_OTHER_AGENT: 5
+        
     }
     if is_subset(events, [e.BOMB_DROPPED, WALKS_INTO_BOMB_RADIUS]):
         events.remove(WALKS_INTO_BOMB_RADIUS)

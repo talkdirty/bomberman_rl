@@ -30,6 +30,14 @@ def bomb_pathfinding_grid(state):
     g = Grid(matrix=grid)
     return g
 
+def bomb_pathfinding_grid_neighbor(state):
+    grid = np.zeros_like(state['field'])
+    grid[state['field'] == 1] = 1 # Crates are unwalkable
+    grid[state['field'] == -1] = -1 # Walls are unwalkable
+    grid[state['field'] == 0] = 1 # Floor is walkable
+    g = Grid(matrix=grid)
+    return g
+
 def get_available_actions(gym_state, orig_state):
     available_actions = ['WAIT']
     if orig_state['self'][2]:

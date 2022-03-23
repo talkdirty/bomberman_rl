@@ -1,11 +1,11 @@
 from bombergym.environments.base import BombeRLeWorld
 import bombergym.settings as s
-
+import numpy as np
 import gym
 from gym import spaces
 
 from .features import state_to_gym
-from .rewards_murder import reward_from_events
+from .rewards_murder import reward_from_events, unnecessary_bomb
 from .rewards_murder import moved_towards_agent, dropped_bomb_next_to_other
 
 class BomberGymReduced(BombeRLeWorld, gym.Env):
@@ -31,7 +31,17 @@ class BomberGymReduced(BombeRLeWorld, gym.Env):
         return state_to_gym(orig_state)
 
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
-        return []#moved_towards_agent(old_state, new_state), dropped_bomb_next_to_other(new_state)
+        if new_state is not None:
+            crates = np.sum(new_state['field'] == 1)
+            if moved_towards_agent(old_state, new_state) and crates < 130:
+                return [moved_towards_agent(old_state, new_state), unnecessary_bomb(new_state)]#moved_towards_agent(old_state, new_state), dropped_bomb_next_to_other(new_state)
+            elif unnecessary_bomb(new_state):
+                return [unnecessary_bomb(new_state)]
+            else:
+                return None
+        else:
+            return None
+
 
     def step(self, action):
         action_orig = s.ACTIONS[action]
