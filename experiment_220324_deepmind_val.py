@@ -1,12 +1,11 @@
-# Goal: generate a validation metric for CnnBoard agent,
-# that can be directly accessed in the training loop.
 import torch
 import ray
-from experiment_220322_resnet_model import CnnboardResNet
 from bombergym.scenarios import classic, classic_with_opponents, coin_heaven
 from bombergym.environments import register
 import gym
 import numpy as np
+
+from experiment_220324_deepmind_arch import DeepmindAtariCNN, DeepmindAtariCNNDeep
 
 def detect_initial_configuration(obs):
     agent_frame = obs[4, :, :]
@@ -73,39 +72,41 @@ def transposer_lrtd(model, inp):
         new_action_udlr = action
     return new_action_udlr
 
-@ray.remote
-def validate_model(model_state_dict, n_episodes=100):
+def validate_model(model):
     # Load model
-    device = torch.device("cpu")
-    model = CnnboardResNet().to(device)
-    model.load_state_dict(model_state_dict)
-    model.eval()
-
     register()
     settings, agents = classic_with_opponents()
     env = gym.make("BomberGym-v4", args=settings, agents=agents)
 
     won, lost = 0, 0
-    for i in range(n_episodes):
-        obs = env.reset()
-        initial_config = detect_initial_configuration(obs)
-        transposer = get_transposer(initial_config)
-        while True:
-            action = transposer(model, obs.astype(np.float32))
-            obs, rew, done, other = env.step(action)
-            if done:
-                if env.env.did_i_win():
-                    won += 1
-                else:
-                    lost += 1
-                break
+    obs = env.reset()
+    initial_config = detect_initial_configuration(obs)
+    transposer = get_transposer(initial_config)
+    prev_obs = None
+    while True:
+        if prev_obs is None:
+            double_obs = np.dstack((obs, obs))
+        else:
+            double_obs = np.dstack((prev_obs, obs))
+        action = transposer(model, double_obs.astype(np.float32))
+        prev_obs = obs
+        obs, rew, done, other = env.step(action)
+        if done:
+            if env.env.did_i_win():
+                won += 1
+            else:
+                lost += 1
+            break
     return won, lost
 
-def validate(model_state_dict, n_jobs=10, n_episodes_per_job=100):
-    jobs = []
-    for i in range(n_jobs):
-        jobs.append(validate_model.remote(model_state_dict, n_episodes=n_episodes_per_job)) 
-    stats = ray.get(jobs)
+def validate(model_state_dict, n_episodes):
+    device = torch.device("cpu")
+    model = DeepmindAtariCNNDeep().to(device)
+    model.load_state_dict(model_state_dict)
+    model.eval()
+    stats = []
+    for i in range(n_episodes):
+        stats.append(validate_model(model)) 
     total_won, total_lost = 0, 0
     for won, lost in stats:
         total_won += won

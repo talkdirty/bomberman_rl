@@ -19,8 +19,8 @@ from torch.optim import lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 
 import bombergym.settings as s
-from experiment_220322_cnnboard_val_metric import validate
-from experiment_220322_resnet_model import CnnboardResNet
+from experiment_220324_deepmind_val import validate
+from experiment_220324_deepmind_arch import DeepmindAtariCNN, DeepmindAtariCNNDeep
 
 class GameplayDataset():
     def __init__(self, directory):
@@ -33,7 +33,7 @@ class GameplayDataset():
     def __getitem__(self, item):
         try:
             with lzma.open(f'{self.directory}/{self.files[item]}') as fd:
-                state, action, _, _ = pickle.load(fd)
+                state, action = pickle.load(fd)[:2]
         except EOFError:
             print(f'Warn: {item}, {self.files[item]} is broken.')
             return random.choice(self)
@@ -54,6 +54,7 @@ def train_model(
         output_path,
         num_epochs=25, 
         start_epoch=0,
+        is_deep=False,
         ):
     since = time.time()
 
@@ -109,11 +110,12 @@ def train_model(
         for k, v in model.state_dict().items():
             model_dict_cpucopy[k] = v.cpu()
 
-        winning_fraction = validate(model_dict_cpucopy)
+        winning_fraction = validate(model_dict_cpucopy, n_episodes=100)
         writer.add_scalar('Winning/val', winning_fraction, epoch)
+        print(f'Winning fraction is {winning_fraction}')
         if winning_fraction > best_validation_winningfrac:
             best_validation_winningfrac = winning_fraction
-            checkpoint_path_model = f'{output_path}/model{epoch}.pth'
+            checkpoint_path_model = f'{output_path}/model{epoch}-deep{is_deep}.pth'
             print(f"Saving best model to {checkpoint_path_model}")
             torch.save(model.state_dict(), checkpoint_path_model)
 
@@ -126,7 +128,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='Output for tensorboard & Checkpoints', required=True)
     parser.add_argument('--resume', help='Resume checkpoint', required=False)
     parser.add_argument('--data', help='Training data Input', required=True)
-    parser.add_argument('--epochs', default=60, required=False)
+    parser.add_argument('--epochs', default=60, required=False, type=int)
+    parser.add_argument('--deep', action='store_true', required=False, default=False)
 
     args = parser.parse_args()
 
@@ -148,7 +151,10 @@ if __name__ == '__main__':
         "train": train_loader,
         #"val": val_loader,
     }
-    model = CnnboardResNet().to(device)
+    if not args.deep:
+        model = DeepmindAtariCNN().to(device)
+    else:
+        model = DeepmindAtariCNNDeep().to(device)
 
 
     optimizer_ft = optim.Adam(model.parameters(), lr=0.0025)
@@ -182,5 +188,6 @@ if __name__ == '__main__':
             writer, 
             args.output, 
             num_epochs=args.epochs,
-            start_epoch=last_epoch + 1
+            start_epoch=last_epoch + 1,
+            is_deep=args.deep,
     )
