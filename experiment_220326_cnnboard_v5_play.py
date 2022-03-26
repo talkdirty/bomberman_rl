@@ -1,12 +1,22 @@
-# Goal: generate a validation metric for CnnBoard agent,
-# that can be directly accessed in the training loop.
-import torch
-import ray
-from experiment_220322_resnet_model import CnnboardResNet
-from bombergym.scenarios import classic, classic_with_opponents, coin_heaven
-from bombergym.environments import register
 import gym
+from bombergym.scenarios import classic_with_opponents, classic_tournament
+from bombergym.environments import register
+import torch
+import time
 import numpy as np
+
+from experiment_220322_resnet_model import CnnboardResNet
+
+model = CnnboardResNet()
+model.load_state_dict(torch.load("out_220326_supervised_resnet18_v5/model18.pth"))
+model.eval()
+
+register()
+settings, agents = classic_tournament()
+#settings, agents = classic_with_opponents()
+#settings, agents = coin_heaven()
+
+env = gym.make('BomberGym-v5', args=settings, agents=agents)
 
 def detect_initial_configuration(obs):
     agent_frame = obs[4, :, :]
@@ -25,7 +35,7 @@ def detect_initial_configuration(obs):
 
 def get_transposer(config):
     if config == 'top-left':
-        return lambda model, input: model(torch.from_numpy(input).unsqueeze(0)).argmax().item()
+        return lambda model, input: model(torch.from_numpy(input).unsqueeze(0).to(torch.float32)).argmax().item()
     elif config == 'top-right':
         return transposer_lr
     elif config == 'bottom-left':
@@ -73,41 +83,21 @@ def transposer_lrtd(model, inp):
         new_action_udlr = action
     return new_action_udlr
 
-@ray.remote
-def validate_model(model_state_dict, n_episodes=100):
-    # Load model
-    device = torch.device("cpu")
-    model = CnnboardResNet().to(device)
-    model.load_state_dict(model_state_dict)
-    model.eval()
-
-    register()
-    settings, agents = classic_with_opponents()
-    env = gym.make("BomberGym-v5", args=settings, agents=agents)
-
-    won, lost = 0, 0
-    for i in range(n_episodes):
-        obs = env.reset()
-        initial_config = detect_initial_configuration(obs)
-        transposer = get_transposer(initial_config)
-        while True:
-            action = transposer(model, obs.astype(np.float32))
-            obs, rew, done, other = env.step(action)
-            if done:
-                if env.env.did_i_win():
-                    won += 1
-                else:
-                    lost += 1
-                break
-    return won, lost
-
-def validate(model_state_dict, n_jobs=10, n_episodes_per_job=100):
-    jobs = []
-    for i in range(n_jobs):
-        jobs.append(validate_model.remote(model_state_dict, n_episodes=n_episodes_per_job)) 
-    stats = ray.get(jobs)
-    total_won, total_lost = 0, 0
-    for won, lost in stats:
-        total_won += won
-        total_lost += lost
-    return total_won / (total_won + total_lost)
+obs = env.reset()
+initial_config = detect_initial_configuration(obs)
+transposer = get_transposer(initial_config)
+print(f'Config: {initial_config}')
+time.sleep(1)
+env.render()
+while True:
+    action = transposer(model, obs.astype(np.float32))
+    obs, rew, done, other = env.step(action)
+    if not done:
+        feature_info = other["features"] if "features" in other else None
+        env.render(events=other["events"], rewards=rew, other=feature_info)
+        time.sleep(.5)
+    else:
+        print(other["events"], f"Reward: {rew}")
+        break
+    
+ 

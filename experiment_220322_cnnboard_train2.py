@@ -25,7 +25,7 @@ from experiment_220322_resnet_model import CnnboardResNet
 class GameplayDataset():
     def __init__(self, directory):
         self.directory = directory
-        self.files = os.listdir(directory)
+        self.files = os.listdir(directory)[:1000000]
 
     def __len__(self):
         return len(self.files)
@@ -34,8 +34,8 @@ class GameplayDataset():
         try:
             with lzma.open(f'{self.directory}/{self.files[item]}') as fd:
                 state, action, _, _ = pickle.load(fd)
-        except EOFError:
-            print(f'Warn: {item}, {self.files[item]} is broken.')
+        except Exception as e:
+            print(f'Warn: {item}, {self.files[item]} is broken. ({e})')
             return random.choice(self)
         action_oh = torch.zeros(len(s.ACTIONS), dtype=torch.float32)
         action_oh[action] = 1.

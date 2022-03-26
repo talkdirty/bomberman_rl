@@ -42,13 +42,19 @@ class ClassicSettingsEnemies(BasicSettings):
         'rule_based_agent',
     ]
 
+class ClassicSettingsTournament(BasicSettings):
+    scenario = 'classic'
+    agents = [
+        'gym_surrogate_agent', 
+        'peaceful_agent',
+        'random_agent',
+        'rule_based_agent',
+    ]
+
 def get_agents(settings):
     agents = []
     if settings.train == 0 and not settings.continue_without_training:
         settings.continue_without_training = True
-    if settings.my_agent:
-        agents.append((settings.my_agent, len(agents) < settings.train))
-        settings.agents = ["rule_based_agent"] * (s.MAX_AGENTS - 1)
     for agent_name in settings.agents:
         agents.append((agent_name, len(agents) < settings.train))
     return agents
@@ -67,6 +73,14 @@ def classic():
     Classic scenario. Only the agent. No enemies.
     """
     settings = ClassicSettings()
+    agents = get_agents(settings)
+    return settings, agents
+
+def classic_tournament():
+    """
+    Tournament mode: 1 random agent, 1 peaceful, 1 rule_based.
+    """
+    settings = ClassicSettingsTournament()
     agents = get_agents(settings)
     return settings, agents
 

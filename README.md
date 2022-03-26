@@ -6,7 +6,7 @@ Bombergym features a rewrite of the original bomberman_rl game engine in order t
 2. We can use the existing ecosystem and libraries to avoid having to write boilerplate. For example, we can use `make_vec_env` from `stable_baselines3` to create vectorized environments and train our agent in parallel without having to worry how to do this with the existing game engine.
 3. We can make development and collaboration easier and more streamlined by clearly separating what makes up the environment (observation space, action space, rewards) and what makes up our reinforcement learning algorithm and training routines.
 
-Also, we completely ripped out pygame (sorry, it's fun and looks great, but not practical), and replaced it with a CLI based rendering of the game:
+Also, we completely ripped out pygame, and replaced it with a CLI based rendering of the game. Makes debugging easier, the GPU I have is only accessible via ssh.
 
 ![Image](./assets/bombergym.png)
 
@@ -194,7 +194,7 @@ optimize the policy.
 
 `Codename: Cnnboard`
 
-Trying out a kind of stupid idea. Work in progress. Back to the roots - similar
+Back to the roots - similar
 to plain boards, but different channels conveying different information, like
 r,g,b channels in image, grid,danger,enemy,coin,crate channel - put into CNN.
 Collect data with rule-based agent and injected randomness. Try to teach a CNN
@@ -207,3 +207,19 @@ that kind of works (except for complete failure at the end, but we didn't train
 this one very long:)
 
 ![](./assets/cnnboard_experiment_promising_results.gif)
+
+### BomberGym-v5
+
+`Codename: Cnnboard-v2`
+
+Based on successes of cnnboard, we try to incorporate more temporal information
+in the current game state. The agent input plane of the cnnboard will leave
+"breadcrumbs": values decaying to zero indicating the agents previous positions.
+With this we easily reach the performance of rule_based_agent and we don't have
+the bombergym-v4 problem where the agent randomly is stuck in the loop some times,
+like in the gif above.
+New last minute idea: take our best model, and now train online. selective experience
+replay. encourage more coin collection. discourage getting stuck in a corner where
+we can be exploded.
+Possible ablation experiment: Breadcrumb duration. Currently set to 3, i.e. last
+3 agent moves are encoded in agent plane.

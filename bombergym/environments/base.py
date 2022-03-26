@@ -15,7 +15,6 @@ import gym
 from gym import spaces
 from bombergym.render import render
 
-
 WorldArgs = namedtuple("WorldArgs",
                        ["no_gui", "fps", "turn_based", "update_interval", "save_replay", "replay", "make_video", "continue_without_training", "log_dir", "save_stats", "match_name", "seed", "silence_errors", "scenario"])
 

@@ -67,7 +67,7 @@ def make_augmentations(old_obs, action, rew, obs):
 def work(out_folder, id, n_episodes=100):
     register()
     settings, agents = classic_with_opponents()
-    env = gym.make("BomberGym-v4", args=settings, agents=agents)
+    env = gym.make("BomberGym-v5", args=settings, agents=agents)
 
     self = Self()
     setup(self)
