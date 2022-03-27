@@ -1,7 +1,8 @@
 # Goal: generate a validation metric for CnnBoard agent,
 # that can be directly accessed in the training loop.
 import torch
-import ray
+import joblib
+from tqdm import tqdm
 from experiment_220322_resnet_model import CnnboardResNet
 from bombergym.scenarios import classic, classic_with_opponents, coin_heaven
 from bombergym.environments import register
@@ -73,7 +74,6 @@ def transposer_lrtd(model, inp):
         new_action_udlr = action
     return new_action_udlr
 
-@ray.remote
 def validate_model(model_state_dict, n_episodes=100):
     # Load model
     device = torch.device("cpu")
@@ -101,11 +101,11 @@ def validate_model(model_state_dict, n_episodes=100):
                 break
     return won, lost
 
-def validate(model_state_dict, n_jobs=10, n_episodes_per_job=100):
-    jobs = []
-    for i in range(n_jobs):
-        jobs.append(validate_model.remote(model_state_dict, n_episodes=n_episodes_per_job)) 
-    stats = ray.get(jobs)
+def validate(model_state_dict, n=1000, n_jobs=6):
+    n_per_proc = n // n_jobs 
+    stats = joblib.Parallel(n_jobs=n_jobs)(
+            joblib.delayed(lambda: validate_model(model_state_dict, n_episodes=n_per_proc))() for _ in range(n_jobs))
+    # stats.append(validate_model(model_state_dict, n_episodes=n)) 
     total_won, total_lost = 0, 0
     for won, lost in stats:
         total_won += won
