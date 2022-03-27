@@ -356,7 +356,7 @@ class BombeRLeWorld(gym.Env):
             coins.append(Coin((x, y), collectable=arena[x, y] == FREE))
 
         # Reset agents and distribute starting positions
-        if False:
+        if True:
             my_agent_pos = (1,1)
             active_agents = [self.agents[0]]
             self.agents[0].x, self.agents[0].y = my_agent_pos
