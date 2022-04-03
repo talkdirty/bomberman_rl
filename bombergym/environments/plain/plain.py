@@ -25,7 +25,30 @@ class BomberGymPlain(BombeRLeWorld, gym.Env):
         """Gym API reset"""
         self.new_round()
         orig_state = self.get_state_for_agent(self.agents[0])
+        self.initial_state = orig_state
         return state_to_gym(orig_state)
+
+    def did_i_win(self):
+        enemy_scores = []
+        my_score = 0
+        for agent in self.agents:
+            if agent.code_name == "gym_surrogate_agent":
+                my_score = agent.score
+            else:
+                enemy_scores.append(agent.score)
+        # print(f'my score: {my_score}, enemy scores: {enemy_scores}')
+        if my_score > max(enemy_scores):
+            return True
+        else:
+            return False
+
+    def did_i_die(self):
+        died = True
+        for agent in self.active_agents:
+            if agent.code_name == "gym_surrogate_agent":
+                died = False
+                break
+        return died
 
     def compute_extra_events(self, old_state: dict, new_state: dict, action):
         events = []
@@ -42,9 +65,9 @@ class BomberGymPlain(BombeRLeWorld, gym.Env):
         # Treat our own agent specially and dispatch its action
         # WARNING alters game logic a bit, as we are usually not
         # executed first (TODO relevant?)
-        self.perform_agent_action(self.agents[0], action_orig)
+        # self.perform_agent_action(self.agents[0], action_orig)
         # Hook into original logic and dispatch world update
-        events = self.do_step()
+        events = self.do_step(action_orig)
         orig_state = self.get_state_for_agent(self.agents[0])
         # Provide facility for computing extra events with altered control
         # flow, similar to train:game_events_occured in callback version
